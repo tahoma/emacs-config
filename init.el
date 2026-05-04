@@ -43,6 +43,9 @@
 (recentf-mode 1)
 (electric-pair-mode 1)
 
+(use-package magit
+  :bind ("C-c g" . magit-status))
+
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-exists-p custom-file)
