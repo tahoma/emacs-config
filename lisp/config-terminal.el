@@ -14,8 +14,14 @@
 
 (declare-function shell-command-with-editor-mode "with-editor")
 (declare-function with-editor-async-shell-command "with-editor")
+(declare-function with-editor-cancel "with-editor")
 (declare-function with-editor-export-editor "with-editor")
+(declare-function with-editor-finish "with-editor")
 (declare-function with-editor-shell-command "with-editor")
+(declare-function flyspell-mode "flyspell")
+
+(defvar git-commit-mode-map)
+(defvar ispell-program-name)
 
 (defgroup my/terminal nil
   "Terminal-frame behavior for this Emacs config."
@@ -66,6 +72,16 @@ Terminal mouse support is most useful over SSH and in `emacsclient -t' frames,
 where it makes scrolling, selecting windows, and point placement feel closer to
 GUI Emacs without changing GUI behavior."
   :type 'boolean
+  :group 'my/terminal)
+
+(defcustom my/terminal-git-commit-fill-column 72
+  "Fill column used while editing Git commit message bodies."
+  :type 'integer
+  :group 'my/terminal)
+
+(defcustom my/terminal-git-commit-summary-max-length 72
+  "Maximum Git commit summary length before `git-commit' warns."
+  :type 'integer
   :group 'my/terminal)
 
 (defun my/terminal-frame-p (&optional frame)
@@ -179,6 +195,24 @@ intent clear and avoids enabling terminal escape handling during batch runs."
     (keymap-global-set "<mouse-4>" #'scroll-down-line)
     (keymap-global-set "<mouse-5>" #'scroll-up-line)))
 
+(defun my/terminal-spell-command-available-p ()
+  "Return non-nil when Flyspell has an external spelling program to call."
+  (and (boundp 'ispell-program-name)
+       ispell-program-name
+       (executable-find ispell-program-name)))
+
+(defun my/terminal-git-commit-setup ()
+  "Apply writing defaults for commit messages opened by Git.
+Commit buffers are a common terminal `$EDITOR' path, so make the body wrap at a
+conventional width, enable Auto Fill, and turn on Flyspell when the host has a
+spelling backend. The finish/cancel bindings live in the package declaration so
+they are visible even before a commit buffer has run its hooks."
+  (setq-local fill-column my/terminal-git-commit-fill-column)
+  (auto-fill-mode 1)
+  (when (and (fboundp 'flyspell-mode)
+             (my/terminal-spell-command-available-p))
+    (flyspell-mode 1)))
+
 (use-package with-editor
   :commands (shell-command-with-editor-mode
              with-editor-async-shell-command
@@ -186,6 +220,19 @@ intent clear and avoids enabling terminal escape handling during batch runs."
              with-editor-shell-command)
   :config
   (my/terminal-enable-with-editor))
+
+(use-package git-commit
+  ;; `git-commit' is shipped by Magit, so `make setup' installs it by installing
+  ;; Magit. Marking it as not separately ensured avoids asking package.el for a
+  ;; package that does not exist as an independent archive entry.
+  :ensure nil
+  :after with-editor
+  :custom
+  (git-commit-summary-max-length my/terminal-git-commit-summary-max-length)
+  :hook (git-commit-setup . my/terminal-git-commit-setup)
+  :bind (:map git-commit-mode-map
+         ("C-c C-c" . with-editor-finish)
+         ("C-c C-k" . with-editor-cancel)))
 
 (my/terminal-apply-osc52-clipboard)
 (my/terminal-apply-editor-environment)

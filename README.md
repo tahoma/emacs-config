@@ -209,7 +209,9 @@ inside Emacs. `with-editor` also exports editor variables for `shell`, `eshell`,
 and other CLI editor requests inside the current terminal; `-a ""` starts a
 server-backed Emacs if needed. In interactive terminal frames, `xterm-mouse-mode`
 is enabled so scrolling and point/window selection work in terminals that
-support mouse escape sequences.
+support mouse escape sequences. Git commit message buffers get a 72-column body
+fill, Auto Fill, Flyspell when a spelling backend exists, and familiar
+`C-c C-c`/`C-c C-k` finish/cancel bindings.
 
 ## Optional External Tools
 

@@ -53,6 +53,11 @@
 (defvar my/terminal-start-server)
 (defvar my/terminal-with-editor-enabled)
 (defvar my/terminal-mouse-enabled)
+(defvar my/terminal-git-commit-fill-column)
+(defvar my/terminal-git-commit-summary-max-length)
+(defvar git-commit-mode-map)
+(defvar git-commit-setup-hook)
+(defvar git-commit-summary-max-length)
 (defvar shell-command-with-editor-mode)
 (defvar my/snippets-directory)
 (defvar my/agent-codex-command)
@@ -127,6 +132,7 @@
 (declare-function my/terminal-editor-environment "config-terminal")
 (declare-function my/terminal-enable-with-editor "config-terminal")
 (declare-function my/terminal-apply-mouse "config-terminal")
+(declare-function my/terminal-git-commit-setup "config-terminal")
 (declare-function my/terminal-maybe-start-server "config-terminal")
 (declare-function my/terminal-osc52-copy "config-terminal")
 (declare-function my/terminal-osc52-sequence "config-terminal")
@@ -583,6 +589,31 @@
       (should (equal enabled 1))
       (should (lookup-key global-map [mouse-4]))
       (should (lookup-key global-map [mouse-5])))))
+
+(ert-deftest emacs-config/terminal-git-commit-package-is-available ()
+  (should (require 'git-commit nil t)))
+
+(ert-deftest emacs-config/terminal-git-commit-defaults-are-configured ()
+  (should (= my/terminal-git-commit-fill-column 72))
+  (should (= my/terminal-git-commit-summary-max-length 72))
+  (should (= git-commit-summary-max-length
+             my/terminal-git-commit-summary-max-length))
+  (should (memq #'my/terminal-git-commit-setup git-commit-setup-hook)))
+
+(ert-deftest emacs-config/terminal-git-commit-setup-enables-writing-defaults ()
+  (with-temp-buffer
+    (let ((my/terminal-git-commit-fill-column 72))
+      (cl-letf (((symbol-function 'executable-find)
+                 (lambda (_command) nil)))
+        (my/terminal-git-commit-setup)))
+    (should (= fill-column 72))
+    (should (bound-and-true-p auto-fill-function))))
+
+(ert-deftest emacs-config/terminal-git-commit-finish-bindings-are-present ()
+  (should (eq (lookup-key git-commit-mode-map (kbd "C-c C-c"))
+              'with-editor-finish))
+  (should (eq (lookup-key git-commit-mode-map (kbd "C-c C-k"))
+              'with-editor-cancel)))
 
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file
