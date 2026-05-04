@@ -42,8 +42,9 @@ This repository is meant to live at `~/.emacs.d`.
   support for shells launched from Emacs, and xterm-compatible mouse support
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
-- Agentic workflow support: project-root Codex CLI launch helpers, project
-  buffer saving, and copyable file/region context commands
+- Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
+  launch helpers, project buffer saving, and copyable file/region context
+  commands
 - Debugging support: optional Dape keybindings for Debug Adapter Protocol
   sessions across language-specific adapters
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
@@ -92,7 +93,7 @@ libraries:
 - `snippets/`: first-party snippets loaded by `config-snippets.el`
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
-- `config-agent.el`: Codex CLI and project-root agent terminal helpers
+- `config-agent.el`: agent provider registry plus project-root terminal helpers
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
 - `config-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
