@@ -43,8 +43,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
-  launch helpers, project buffer saving, and copyable file/region context
-  commands
+  launch helpers, project buffer saving, and copyable file/region/project
+  context commands
 - Debugging support: optional Dape keybindings for Debug Adapter Protocol
   sessions across language-specific adapters
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
@@ -122,6 +122,19 @@ the full guidance in multiple files.
 Local personal agent notes should stay untracked. `CLAUDE.local.md`,
 `.claude/settings.local.json`, and `.cursor/rules/*.local.mdc` are ignored by
 git for that reason.
+
+## Agent Control Plane
+
+The `C-c a` prefix gathers agent-facing workflows in one place. `C-c a a`
+launches Codex, `C-c a d` launches Claude Code, `C-c a u` launches Cursor
+Agent, and `C-c a A` prompts for any configured provider. All launchers start in
+the current project root and save modified project buffers first when
+`my/agent-save-project-buffers-before-launch` is non-nil.
+
+Use `C-c a p` to copy generated project context for an agent, or `C-c a P` to
+open that context in a review buffer. The generated context includes the project
+root, git branch/status, and project instruction files such as `AGENTS.md`,
+`CLAUDE.md`, Cursor rules, and `README.md`.
 
 ## Test
 

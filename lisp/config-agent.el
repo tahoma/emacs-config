@@ -10,6 +10,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'seq)
 (require 'config-project)
 (require 'use-package)
 
@@ -50,6 +51,22 @@ hold a command list suitable for `my/agent-command-line'."
 (defcustom my/agent-save-project-buffers-before-launch t
   "When non-nil, save modified project buffers before launching an agent."
   :type 'boolean
+  :group 'tools)
+
+(defcustom my/agent-project-context-files
+  '("AGENTS.md"
+    "CLAUDE.md"
+    ".cursor/rules/emacs-config.mdc"
+    "README.md")
+  "Project-relative files to include in generated agent context.
+Missing files are skipped so the same command works across repositories that
+only use part of this agent instruction setup."
+  :type '(repeat string)
+  :group 'tools)
+
+(defcustom my/agent-project-context-status-limit 80
+  "Maximum number of `git status --short' lines in project context."
+  :type 'integer
   :group 'tools)
 
 (defun my/agent-command-line (command)
@@ -93,6 +110,95 @@ hold a command list suitable for `my/agent-command-line'."
                   my/agent-providers))
          (choice (completing-read "Agent: " candidates nil t nil nil "Codex")))
     (cdr (assoc choice candidates))))
+
+(defun my/agent--git-lines (root &rest args)
+  "Return lines from running git ARGS in ROOT, or nil when unavailable."
+  (when (executable-find "git")
+    (let ((default-directory root))
+      (ignore-errors
+        (apply #'process-lines "git" args)))))
+
+(defun my/agent--git-branch (root)
+  "Return a human-readable git branch or revision for ROOT."
+  (or (car (my/agent--git-lines root "branch" "--show-current"))
+      (car (my/agent--git-lines root "rev-parse" "--short" "HEAD"))
+      "unavailable"))
+
+(defun my/agent--git-status-lines (root)
+  "Return a bounded list of `git status --short' lines for ROOT."
+  (if (not (executable-find "git"))
+      '("unavailable")
+    (let ((default-directory root))
+      (condition-case nil
+          (let ((lines (process-lines "git" "status" "--short")))
+            (cond
+             ((null lines) '("clean"))
+             ((> (length lines) my/agent-project-context-status-limit)
+              (append (seq-take lines my/agent-project-context-status-limit)
+                      (list (format "... %d more files"
+                                    (- (length lines)
+                                       my/agent-project-context-status-limit)))))
+             (t lines)))
+        (error '("unavailable"))))))
+
+(defun my/agent--context-file-section (root relative-file)
+  "Return an agent-context markdown section for RELATIVE-FILE under ROOT."
+  (let ((file (expand-file-name relative-file root)))
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (format "## %s\n\n```text\n%s\n```\n"
+                relative-file
+                (buffer-string))))))
+
+(defun my/agent-project-context-string ()
+  "Return a markdown project briefing suitable for agent context."
+  (let* ((root (my/project-root))
+         (branch (my/agent--git-branch root))
+         (status-lines (my/agent--git-status-lines root))
+         (file-sections
+          (delq nil
+                (mapcar (lambda (relative-file)
+                          (my/agent--context-file-section root relative-file))
+                        my/agent-project-context-files))))
+    (string-join
+     (append
+      (list
+       "# Agent Project Context\n"
+       (format "- Project root: `%s`" (directory-file-name root))
+       (format "- Git branch/revision: `%s`" branch)
+       ""
+       "## Git Status"
+       ""
+       "```text"
+       (string-join status-lines "\n")
+       "```"
+       "")
+      file-sections)
+     "\n")))
+
+(defun my/agent-copy-project-context ()
+  "Copy a project briefing for pasting into an agent."
+  (interactive)
+  (kill-new (my/agent-project-context-string))
+  (message "Copied project context for agent use"))
+
+(defun my/agent-open-project-context ()
+  "Open a generated project briefing buffer for review or editing."
+  (interactive)
+  (let* ((root (my/project-root))
+         (name (file-name-nondirectory (directory-file-name root)))
+         (buffer (get-buffer-create (format "*agent-context:%s*" name))))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (my/agent-project-context-string))
+        (goto-char (point-min))
+        (if (fboundp 'markdown-mode)
+            (markdown-mode)
+          (text-mode)))
+      (view-mode 1))
+    (pop-to-buffer buffer)))
 
 (defun my/agent--project-buffer-p (buffer root)
   "Return non-nil when BUFFER visits a file below ROOT."
@@ -177,6 +283,12 @@ BUFFER-SUFFIX names the agent-specific buffer when provided."
   (my/agent-copy-region-context start end)
   (my/agent-codex))
 
+(defun my/agent-launch-with-project-context (provider)
+  "Copy project context, then launch PROVIDER."
+  (interactive (list (my/agent-read-provider)))
+  (my/agent-copy-project-context)
+  (my/agent-launch provider))
+
 (defun my/agent-copy-file-context ()
   "Copy the current file and line as lightweight agent context."
   (interactive)
@@ -200,6 +312,9 @@ BUFFER-SUFFIX names the agent-specific buffer when provided."
          ("C-c a d" . my/agent-claude)
          ("C-c a u" . my/agent-cursor)
          ("C-c a f" . my/agent-codex-with-file)
+         ("C-c a p" . my/agent-copy-project-context)
+         ("C-c a P" . my/agent-open-project-context)
+         ("C-c a L" . my/agent-launch-with-project-context)
          ("C-c a r" . my/agent-codex-with-region)
          ("C-c a t" . my/agent-project-vterm)))
 
