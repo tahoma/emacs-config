@@ -79,6 +79,8 @@
 (defvar my/terminal-tramp-auto-save-directory)
 (defvar my/terminal-tramp-verbose)
 (defvar my/terminal-xterm-key-decodes)
+(defvar my/project-command-defaults)
+(defvar my/project-command-history)
 (defvar create-lockfiles)
 (defvar git-commit-mode-map)
 (defvar git-commit-setup-hook)
@@ -101,6 +103,11 @@
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
+(declare-function my/project-command-candidates "config-project-commands")
+(declare-function my/project-command-detected-candidates "config-project-commands")
+(declare-function my/project-command-read "config-project-commands")
+(declare-function my/project-command-repeat "config-project-commands")
+(declare-function my/project-command-run "config-project-commands")
 (declare-function my/tools-import-shell-environment-p "config-tools")
 (declare-function my/c-default-compile-command "config-c")
 (declare-function my/c-format-buffer "config-c")
@@ -246,6 +253,7 @@
                      config-platform
                      config-terminal
                      config-project
+                     config-project-commands
                      config-workspace
                      config-files
                      config-buffers
@@ -283,6 +291,7 @@
                                "lisp/config-platform.el"
                                "lisp/config-terminal.el"
                                "lisp/config-project.el"
+                               "lisp/config-project-commands.el"
                                "lisp/config-workspace.el"
                                "lisp/config-files.el"
                                "lisp/config-buffers.el"
@@ -357,6 +366,7 @@
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
+      (should (string-match-p "lisp/config-project-commands\\.elc" makefile))
       (should (string-match-p "lisp/config-workspace\\.elc" makefile))
       (should (string-match-p "lisp/config-files\\.elc" makefile))
       (should (string-match-p "lisp/config-buffers\\.elc" makefile))
@@ -1129,6 +1139,37 @@
           (let ((default-directory subdir))
             (should (equal (file-truename (my/project-root))
                            (file-truename root)))))
+      (delete-directory root t))))
+
+;;; Generic project command runner
+(ert-deftest emacs-config/project-command-defaults-and-bindings-are-present ()
+  (dolist (command '("make -k" "make test" "make lint" "make run"))
+    (should (member command (mapcar #'cdr my/project-command-defaults))))
+  (should (eq (lookup-key global-map (kbd "C-c p c")) 'my/project-command-run))
+  (should (eq (lookup-key global-map (kbd "C-c p C"))
+              'my/project-command-repeat))
+  (should (eq compilation-scroll-output 'first-error)))
+
+(ert-deftest emacs-config/project-command-detects-common-project-files ()
+  (let ((root (file-name-as-directory
+               (make-temp-file "emacs-config-project-commands-" t))))
+    (unwind-protect
+        (progn
+          (write-region "all:\n" nil (expand-file-name "Makefile" root)
+                        nil 'silent)
+          (write-region "{}\n" nil (expand-file-name "package.json" root)
+                        nil 'silent)
+          (write-region "[package]\nname = \"demo\"\nversion = \"0.1.0\"\n"
+                        nil (expand-file-name "Cargo.toml" root) nil 'silent)
+          (write-region "[project]\nname = \"demo\"\n"
+                        nil (expand-file-name "pyproject.toml" root)
+                        nil 'silent)
+          (let ((commands (mapcar #'cdr
+                                  (my/project-command-detected-candidates root))))
+            (dolist (command '("make -k" "make test" "npm test"
+                               "npm run build" "cargo test" "cargo build"
+                               "pytest" "ruff check ."))
+              (should (member command commands)))))
       (delete-directory root t))))
 
 ;;; Workspace and window ergonomics

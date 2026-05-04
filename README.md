@@ -30,6 +30,8 @@ This repository is meant to live at `~/.emacs.d`.
   modules
 - Project environment support: envrc/direnv integration so repository-local
   `.envrc` files can provide toolchain paths and environment variables to Emacs
+- Project command runner: generic project-root `compile` commands detect common
+  Make, Node, Cargo, and Python project commands
 - Editing hygiene: generated backup/auto-save files under `var/`,
   save-place, auto-revert, long-line protection, delete-selection behavior, and
   code-buffer whitespace cleanup
@@ -94,6 +96,8 @@ libraries:
 - `config-terminal.el`: terminal-frame behavior for SSH, `emacsclient -t`, and
   CLI editor sessions
 - `config-project.el`: project root helpers
+- `config-project-commands.el`: generic project-root command runner using
+  compilation buffers
 - `config-workspace.el`: window history, directional movement, and tab-bar
   project workspaces
 - `config-files.el`: Dired, Dired-X, Wdired, and project file-management

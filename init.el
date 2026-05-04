@@ -15,6 +15,7 @@
 (require 'config-platform)
 (require 'config-terminal)
 (require 'config-project)
+(require 'config-project-commands)
 (require 'config-workspace)
 (require 'config-files)
 (require 'config-buffers)
