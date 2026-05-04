@@ -105,6 +105,28 @@ routine SSH-backed editing."
   :type 'integer
   :group 'my/terminal)
 
+(defconst my/terminal-xterm-key-decodes
+  '(("\e[1;2A" . [S-up])
+    ("\e[1;2B" . [S-down])
+    ("\e[1;2C" . [S-right])
+    ("\e[1;2D" . [S-left])
+    ("\e[1;5A" . [C-up])
+    ("\e[1;5B" . [C-down])
+    ("\e[1;5C" . [C-right])
+    ("\e[1;5D" . [C-left])
+    ("\e[1;6A" . [C-S-up])
+    ("\e[1;6B" . [C-S-down])
+    ("\e[1;6C" . [C-S-right])
+    ("\e[1;6D" . [C-S-left])
+    ("\e[1;2H" . [S-home])
+    ("\e[1;2F" . [S-end])
+    ("\e[1;5H" . [C-home])
+    ("\e[1;5F" . [C-end]))
+  "Conservative xterm-style modified key decodes for terminal Emacs.
+Many terminals can send these sequences for modified arrows, Home, and End.
+Decoding them gives terminal frames useful navigation keys without depending on
+GUI-only modifiers such as Super or Hyper.")
+
 (defun my/terminal-frame-p (&optional frame)
   "Return non-nil when FRAME, or the selected frame, is interactive terminal Emacs.
 Batch Emacs is non-graphical too, but it is not a terminal editor session. That
@@ -255,6 +277,11 @@ they are visible even before a commit buffer has run its hooks."
         tramp-auto-save-directory my/terminal-tramp-auto-save-directory
         remote-file-name-inhibit-locks t))
 
+(defun my/terminal-apply-key-decodes ()
+  "Teach Emacs common xterm escape sequences for modified navigation keys."
+  (dolist (decode my/terminal-xterm-key-decodes)
+    (define-key input-decode-map (car decode) (cdr decode))))
+
 (use-package with-editor
   :commands (shell-command-with-editor-mode
              with-editor-async-shell-command
@@ -281,6 +308,7 @@ they are visible even before a commit buffer has run its hooks."
 (my/terminal-maybe-start-server)
 (my/terminal-apply-mouse)
 (my/terminal-apply-tramp-defaults)
+(my/terminal-apply-key-decodes)
 (add-hook 'after-make-frame-functions #'my/terminal-apply-mouse)
 (add-hook 'find-file-hook #'my/terminal-remote-editing-setup)
 

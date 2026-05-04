@@ -57,6 +57,7 @@
 (defvar my/terminal-git-commit-summary-max-length)
 (defvar my/terminal-tramp-auto-save-directory)
 (defvar my/terminal-tramp-verbose)
+(defvar my/terminal-xterm-key-decodes)
 (defvar create-lockfiles)
 (defvar git-commit-mode-map)
 (defvar git-commit-setup-hook)
@@ -139,6 +140,7 @@
 (declare-function my/terminal-editor-environment "config-terminal")
 (declare-function my/terminal-enable-with-editor "config-terminal")
 (declare-function my/terminal-apply-mouse "config-terminal")
+(declare-function my/terminal-apply-key-decodes "config-terminal")
 (declare-function my/terminal-apply-tramp-defaults "config-terminal")
 (declare-function my/terminal-git-commit-setup "config-terminal")
 (declare-function my/terminal-maybe-start-server "config-terminal")
@@ -647,6 +649,18 @@
       (should (string-match-p "OSC 52" readme))
       (should (string-match-p "set-clipboard" readme))
       (should (string-match-p "terminal-features" readme)))))
+
+(ert-deftest emacs-config/terminal-xterm-key-decodes-are-data-driven ()
+  (should (assoc "\e[1;5D" my/terminal-xterm-key-decodes))
+  (should (assoc "\e[1;5C" my/terminal-xterm-key-decodes))
+  (should (assoc "\e[1;5H" my/terminal-xterm-key-decodes))
+  (should (assoc "\e[1;5F" my/terminal-xterm-key-decodes)))
+
+(ert-deftest emacs-config/terminal-xterm-key-decodes-are-installed ()
+  (should (equal (lookup-key input-decode-map "\e[1;5D") [C-left]))
+  (should (equal (lookup-key input-decode-map "\e[1;5C") [C-right]))
+  (should (equal (lookup-key input-decode-map "\e[1;5H") [C-home]))
+  (should (equal (lookup-key input-decode-map "\e[1;5F") [C-end])))
 
 (ert-deftest emacs-config/terminal-remote-buffer-detection-is-parser-only ()
   (with-temp-buffer

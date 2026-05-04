@@ -213,7 +213,9 @@ support mouse escape sequences. Git commit message buffers get a 72-column body
 fill, Auto Fill, Flyspell when a spelling backend exists, and familiar
 `C-c C-c`/`C-c C-k` finish/cancel bindings. TRAMP defaults prefer SSH, keep
 remote autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use
-modest logging for normal remote editing.
+modest logging for normal remote editing. Common xterm escape sequences are
+decoded for modified arrows, Home, and End so terminal frames can use familiar
+navigation keys without GUI-only modifiers.
 
 ## Terminal Environment
 
