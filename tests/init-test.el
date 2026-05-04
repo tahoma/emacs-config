@@ -31,6 +31,7 @@
 (defvar my/python-fill-column)
 (defvar my/python-format-on-save)
 (defvar my/python-language-server-commands)
+(defvar my/completion-preview-delay)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -67,6 +68,10 @@
 (declare-function my/python-test-file "config-python")
 (declare-function my/python-tool-command "config-python")
 (declare-function my/python-venv-root "config-python")
+(declare-function my/completion-consult-find "config-completion")
+(declare-function my/completion-consult-line-multi "config-completion")
+(declare-function my/completion-consult-ripgrep "config-completion")
+(declare-function my/completion-project-root "config-completion")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -95,6 +100,7 @@
   (dolist (feature '(config-package
                      config-ui
                      config-project
+                     config-completion
                      config-tools
                      config-elisp
                      config-c
@@ -118,6 +124,7 @@
       (dolist (relative-file '("lisp/config-package.el"
                                "lisp/config-ui.el"
                                "lisp/config-project.el"
+                               "lisp/config-completion.el"
                                "lisp/config-tools.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
@@ -144,6 +151,7 @@
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/config-package\\.elc" makefile))
+      (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
@@ -194,6 +202,61 @@
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file
                  (expand-file-name "custom.el" user-emacs-directory))))
+
+;;; Completion, search, and command discovery
+(ert-deftest emacs-config/completion-helper-packages-are-installed ()
+  (dolist (feature '(vertico
+                     orderless
+                     marginalia
+                     consult
+                     embark
+                     embark-consult
+                     which-key))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-completion-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '("vertico"
+                       "orderless"
+                       "marginalia"
+                       "consult"
+                       "embark"
+                       "embark-consult"
+                       "which-key"))
+      (should (search-forward package nil t)))))
+
+(ert-deftest emacs-config/completion-minibuffer-defaults-are-enabled ()
+  (should (bound-and-true-p vertico-mode))
+  (should (bound-and-true-p marginalia-mode))
+  (should (bound-and-true-p which-key-mode))
+  (should (equal completion-styles '(orderless basic)))
+  (should (assoc 'file completion-category-overrides))
+  (should (= my/completion-preview-delay 0.25)))
+
+(ert-deftest emacs-config/completion-project-search-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-s")) 'consult-line))
+  (should (eq (lookup-key global-map (kbd "C-x b")) 'consult-buffer))
+  (should (eq (lookup-key global-map (kbd "C-c p b"))
+              'consult-project-buffer))
+  (should (eq (lookup-key global-map (kbd "C-c p f"))
+              'my/completion-consult-find))
+  (should (eq (lookup-key global-map (kbd "C-c p g"))
+              'my/completion-consult-ripgrep))
+  (should (eq (lookup-key global-map (kbd "C-c p l"))
+              'my/completion-consult-line-multi))
+  (should (eq (lookup-key global-map (kbd "C-c p r"))
+              'consult-recent-file)))
+
+(ert-deftest emacs-config/completion-embark-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-."))
+              'embark-act))
+  (should (eq (lookup-key global-map (kbd "C-;"))
+              'embark-dwim))
+  (should (eq (lookup-key global-map (kbd "C-h B"))
+              'embark-bindings))
+  (should (eq prefix-help-command 'embark-prefix-help-command)))
 
 ;;; Project helper behavior
 (ert-deftest emacs-config/project-root-falls-back-to-default-directory ()

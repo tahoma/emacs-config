@@ -20,6 +20,13 @@
 (defconst emacs-config-setup-packages
   '(use-package
     helpful
+    vertico
+    orderless
+    marginalia
+    consult
+    embark
+    embark-consult
+    which-key
     exec-path-from-shell
     vterm
     magit

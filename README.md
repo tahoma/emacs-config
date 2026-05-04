@@ -16,6 +16,9 @@ This repository is meant to live at `~/.emacs.d`.
 ## Features
 
 - MELPA, GNU ELPA, and Nongnu ELPA package archives
+- Completion and search support: Vertico, Orderless, Marginalia, Consult,
+  Embark, and Which-Key for fast minibuffer selection, project search, and
+  discoverable command prefixes
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -48,6 +51,8 @@ libraries:
 - `config-package.el`: package archives, priorities, and `use-package`
 - `config-ui.el`: basic interface defaults and Helpful
 - `config-project.el`: project root helpers
+- `config-completion.el`: minibuffer completion, project search, command
+  discovery, and action menus
 - `config-tools.el`: vterm and Magit
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
@@ -132,6 +137,7 @@ requires a working compiler toolchain and `cmake` on the machine.
 Some language modules use external command-line tools when they are present and
 fall back gracefully when they are not:
 
+- Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
 - Markdown preview: `pandoc`, `multimarkdown`, or `markdown`
 - Mermaid rendering: `mmdc` from `@mermaid-js/mermaid-cli`
 - JSON filtering/pretty-printing: `jq`
@@ -143,7 +149,7 @@ fall back gracefully when they are not:
 On macOS with Homebrew:
 
 ```sh
-brew install cmake jq node pandoc python ruff uv pipx
+brew install cmake jq node pandoc python ruff uv pipx ripgrep fd
 npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 ```
@@ -152,7 +158,7 @@ On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx
+sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx ripgrep fd-find
 sudo npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 ```

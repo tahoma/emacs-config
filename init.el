@@ -12,6 +12,7 @@
 (require 'config-package)
 (require 'config-ui)
 (require 'config-project)
+(require 'config-completion)
 (require 'config-tools)
 (require 'config-elisp)
 (require 'config-c)
