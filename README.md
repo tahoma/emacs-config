@@ -131,6 +131,26 @@ fall back gracefully when they are not:
 - JSON/YAML language servers: `vscode-json-language-server` and
   `yaml-language-server`
 
+On macOS with Homebrew:
+
+```sh
+brew install cmake jq node pandoc
+npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+```
+
+On Ubuntu/Debian:
+
+```sh
+sudo apt update
+sudo apt install -y build-essential cmake jq nodejs npm pandoc
+sudo npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+```
+
+`vscode-langservers-extracted` provides `vscode-json-language-server`. Mermaid
+CLI can be picky about Node versions on older Linux distributions; if the distro
+Node is too old, install a current LTS Node through your preferred Node version
+manager and rerun the `npm install -g` line.
+
 ## Restore
 
 Clone this repository as `~/.emacs.d`:
