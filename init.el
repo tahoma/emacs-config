@@ -18,6 +18,7 @@
 (require 'config-diagnostics)
 (require 'config-environment)
 (require 'config-tools)
+(require 'config-agent)
 (require 'config-elisp)
 (require 'config-c)
 (require 'config-sql)

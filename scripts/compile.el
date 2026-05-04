@@ -31,6 +31,7 @@
     "lisp/config-diagnostics.el"
     "lisp/config-environment.el"
     "lisp/config-tools.el"
+    "lisp/config-agent.el"
     "lisp/config-elisp.el"
     "lisp/config-c.el"
     "lisp/config-sql.el"

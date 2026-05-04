@@ -45,6 +45,8 @@
 (defvar my/editing-fill-column)
 (defvar my/editing-var-directory)
 (defvar my/snippets-directory)
+(defvar my/agent-codex-command)
+(defvar my/agent-save-project-buffers-before-launch)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -94,6 +96,16 @@
 (declare-function my/editing-clean-code-whitespace-on-save "config-editing")
 (declare-function my/editing-code-buffer-visuals "config-editing")
 (declare-function my/editing-ensure-runtime-directories "config-editing")
+(declare-function my/agent-codex "config-agent")
+(declare-function my/agent-codex-available-p "config-agent")
+(declare-function my/agent-codex-with-file "config-agent")
+(declare-function my/agent-codex-with-region "config-agent")
+(declare-function my/agent-command-line "config-agent")
+(declare-function my/agent-copy-file-context "config-agent")
+(declare-function my/agent-copy-region-context "config-agent")
+(declare-function my/agent-project-vterm "config-agent")
+(declare-function my/agent-run-in-project-vterm "config-agent")
+(declare-function my/agent-save-project-buffers "config-agent")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -128,6 +140,7 @@
                      config-diagnostics
                      config-environment
                      config-tools
+                     config-agent
                      config-elisp
                      config-c
                      config-sql
@@ -156,6 +169,7 @@
                                "lisp/config-diagnostics.el"
                                "lisp/config-environment.el"
                                "lisp/config-tools.el"
+                               "lisp/config-agent.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
                                "lisp/config-sql.el"
@@ -186,6 +200,7 @@
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
+      (should (string-match-p "lisp/config-agent\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
@@ -424,6 +439,43 @@
   (should (eq (lookup-key global-map (kbd "C-c E e"))
               'my/environment-enable-envrc))
   (should (eq (lookup-key global-map (kbd "C-c E r")) 'envrc-reload)))
+
+;;; Agentic development workflow
+(ert-deftest emacs-config/agent-defaults-are-portable ()
+  (should (equal my/agent-codex-command '("codex")))
+  (should my/agent-save-project-buffers-before-launch)
+  (let ((my/agent-codex-command '("definitely-not-a-real-codex-command")))
+    (should-not (my/agent-codex-available-p))))
+
+(ert-deftest emacs-config/agent-command-line-quotes-arguments ()
+  (should (equal (my/agent-command-line
+                  '("/path with spaces/codex" "--flag" "two words"))
+                 "/path\\ with\\ spaces/codex --flag two\\ words")))
+
+(ert-deftest emacs-config/agent-copy-file-context-includes-line ()
+  (let ((file (make-temp-file "emacs-config-agent-" nil ".txt")))
+    (unwind-protect
+        (with-temp-buffer
+          (insert "one\ntwo\n")
+          (write-region (point-min) (point-max) file nil 'silent)
+          (find-file file)
+          (goto-char (point-min))
+          (forward-line 1)
+          (my/agent-copy-file-context)
+          (should (equal (current-kill 0)
+                         (format "File context: %s:2" file)))
+          (kill-buffer))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+(ert-deftest emacs-config/agent-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c a a")) 'my/agent-codex))
+  (should (eq (lookup-key global-map (kbd "C-c a f"))
+              'my/agent-codex-with-file))
+  (should (eq (lookup-key global-map (kbd "C-c a r"))
+              'my/agent-codex-with-region))
+  (should (eq (lookup-key global-map (kbd "C-c a t"))
+              'my/agent-project-vterm)))
 
 ;;; Project helper behavior
 (ert-deftest emacs-config/project-root-falls-back-to-default-directory ()

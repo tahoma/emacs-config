@@ -29,6 +29,8 @@ This repository is meant to live at `~/.emacs.d`.
   code-buffer whitespace cleanup
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
+- Agentic workflow support: project-root Codex CLI launch helpers, project
+  buffer saving, and copyable file/region context commands
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -71,6 +73,7 @@ libraries:
 - `snippets/`: first-party snippets loaded by `config-snippets.el`
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
+- `config-agent.el`: Codex CLI and project-root agent terminal helpers
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
 - `config-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
@@ -156,6 +159,7 @@ fall back gracefully when they are not:
 
 - Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
 - Project environments: `direnv`
+- Agent workflows: `codex` or another Codex CLI launch command on `PATH`
 - Markdown preview: `pandoc`, `multimarkdown`, or `markdown`
 - Mermaid rendering: `mmdc` from `@mermaid-js/mermaid-cli`
 - JSON filtering/pretty-printing: `jq`
