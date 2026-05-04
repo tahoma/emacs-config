@@ -32,6 +32,20 @@ Or invoke Emacs directly:
 emacs -Q --batch -l tests/init-test.el
 ```
 
+## Fresh Machine Setup
+
+Clone this repository as `~/.emacs.d`, then run setup once:
+
+```sh
+cd ~/.emacs.d
+make setup
+make test
+```
+
+`make setup` refreshes package archives, installs the managed package set, and
+compiles the `vterm` native module. `vterm` requires a working compiler toolchain
+and `cmake` on the machine.
+
 ## Restore
 
 Clone this repository as `~/.emacs.d`:
