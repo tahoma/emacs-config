@@ -118,6 +118,19 @@ print_shell_notes() {
   esac
 }
 
+print_terminal_notes() {
+  section "Terminal environment notes"
+  say "For terminal Emacs, use a capable TERM such as xterm-256color outside tmux or tmux-256color inside tmux."
+  say "Avoid TERM=dumb except for intentionally minimal command output."
+  say "For tmux, enable mouse, truecolor, and clipboard passthrough in ~/.tmux.conf when your terminal supports them:"
+  say "  set -g mouse on"
+  say "  set -g set-clipboard on"
+  say "  set -as terminal-features ',xterm-256color:RGB'"
+  say "Older tmux releases may need this truecolor form instead:"
+  say "  set -ga terminal-overrides ',*:Tc'"
+  say "OSC 52 clipboard copy also requires the local terminal emulator to allow clipboard escape sequences."
+}
+
 setup_macos() {
   section "macOS host setup"
   if ! have brew; then
@@ -214,6 +227,7 @@ main() {
   esac
 
   print_shell_notes
+  print_terminal_notes
 
   section "After host setup"
   say "Restart your shell if PATH changed, then run:"

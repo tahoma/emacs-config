@@ -308,6 +308,9 @@
         (should (string-match-p "wl-clipboard" script))
         (should (string-match-p "xdg-utils" script))
         (should (string-match-p "explorer\\.exe" script))
+        (should (string-match-p "Terminal environment notes" script))
+        (should (string-match-p "OSC 52" script))
+        (should (string-match-p "set-clipboard" script))
         (should (string-match-p "npm install -g" script))
         (should (string-match-p "pipx ensurepath" script))))))
 
@@ -634,6 +637,16 @@
   (should (file-directory-p my/terminal-tramp-auto-save-directory))
   (should (string-prefix-p (expand-file-name "var/" emacs-config-test-root)
                            my/terminal-tramp-auto-save-directory)))
+
+(ert-deftest emacs-config/terminal-environment-docs-cover-terminal-setup ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "README.md" emacs-config-test-root))
+    (let ((readme (buffer-string)))
+      (should (string-match-p "## Terminal Environment" readme))
+      (should (string-match-p "TERM" readme))
+      (should (string-match-p "OSC 52" readme))
+      (should (string-match-p "set-clipboard" readme))
+      (should (string-match-p "terminal-features" readme)))))
 
 (ert-deftest emacs-config/terminal-remote-buffer-detection-is-parser-only ()
   (with-temp-buffer

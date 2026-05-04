@@ -215,6 +215,30 @@ fill, Auto Fill, Flyspell when a spelling backend exists, and familiar
 remote autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use
 modest logging for normal remote editing.
 
+## Terminal Environment
+
+Terminal Emacs quality depends partly on the terminal outside Emacs:
+
+- Use a capable `TERM`, such as `xterm-256color` outside tmux or
+  `tmux-256color` inside tmux. Avoid `TERM=dumb` except for intentionally
+  minimal command output.
+- Enable clipboard passthrough for OSC 52 in the local terminal emulator. This
+  is what lets remote `emacs -nw` copy text back to the workstation clipboard.
+- In tmux, enable mouse and clipboard passthrough, and advertise truecolor when
+  your terminal supports it:
+
+```tmux
+set -g mouse on
+set -g set-clipboard on
+set -as terminal-features ',xterm-256color:RGB'
+```
+
+Older tmux versions may use this truecolor form instead:
+
+```tmux
+set -ga terminal-overrides ',*:Tc'
+```
+
 ## Optional External Tools
 
 Some language modules use external command-line tools when they are present and
