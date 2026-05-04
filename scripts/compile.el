@@ -29,6 +29,7 @@
     "lisp/config-terminal.el"
     "lisp/config-project.el"
     "lisp/config-workspace.el"
+    "lisp/config-files.el"
     "lisp/config-completion.el"
     "lisp/config-snippets.el"
     "lisp/config-diagnostics.el"

@@ -48,6 +48,13 @@
 (defvar my/workspace-enable-tab-bar)
 (defvar my/workspace-tab-bar-show)
 (defvar my/workspace-windmove-wrap-around)
+(defvar my/files-dired-omit-files)
+(defvar dired-auto-revert-buffer)
+(defvar dired-dwim-target)
+(defvar dired-kill-when-opening-new-dired-buffer)
+(defvar dired-omit-files)
+(defvar dired-recursive-copies)
+(defvar dired-recursive-deletes)
 (defvar my/platform-open-bindings-prefix)
 (defvar my/platform-preferred-windows-shells)
 (defvar my/terminal-osc52-copy-enabled)
@@ -132,6 +139,9 @@
 (declare-function my/workspace-project-name "config-workspace")
 (declare-function my/workspace-tab-new-for-project "config-workspace")
 (declare-function my/workspace-tab-rename-for-project "config-workspace")
+(declare-function my/files-dired-project-root "config-files")
+(declare-function my/files-dired-toggle-omit "config-files")
+(declare-function my/files-dired-setup "config-files")
 (declare-function my/platform-apply-defaults "config-platform")
 (declare-function my/platform-clipboard-copy-command "config-platform")
 (declare-function my/platform-clipboard-paste-command "config-platform")
@@ -216,6 +226,7 @@
                      config-terminal
                      config-project
                      config-workspace
+                     config-files
                      config-completion
                      config-snippets
                      config-diagnostics
@@ -249,6 +260,7 @@
                                "lisp/config-terminal.el"
                                "lisp/config-project.el"
                                "lisp/config-workspace.el"
+                               "lisp/config-files.el"
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
                                "lisp/config-diagnostics.el"
@@ -319,6 +331,7 @@
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-workspace\\.elc" makefile))
+      (should (string-match-p "lisp/config-files\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
@@ -1112,6 +1125,30 @@
   (should (eq (lookup-key global-map (kbd "C-c w o")) 'tab-next))
   (should (eq (lookup-key global-map (kbd "C-c w p")) 'tab-previous))
   (should (eq (lookup-key global-map (kbd "C-c w c")) 'tab-close)))
+
+;;; Dired and file management
+(ert-deftest emacs-config/files-dired-defaults-are-enabled ()
+  (should dired-dwim-target)
+  (should (eq dired-recursive-copies 'always))
+  (should (eq dired-recursive-deletes 'top))
+  (should dired-auto-revert-buffer)
+  (should dired-kill-when-opening-new-dired-buffer)
+  (should (equal dired-omit-files my/files-dired-omit-files))
+  (should (string-match-p "\\.DS_Store" my/files-dired-omit-files))
+  (should (string-match-p "\\.direnv" my/files-dired-omit-files))
+  (should (string-match-p "\\.elc" my/files-dired-omit-files)))
+
+(ert-deftest emacs-config/files-dired-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c f d")) 'dired-jump))
+  (should (eq (lookup-key global-map (kbd "C-c f p"))
+              'my/files-dired-project-root))
+  (should (eq (lookup-key dired-mode-map (kbd "C-c C-e"))
+              'wdired-change-to-wdired-mode))
+  (should (eq (lookup-key dired-mode-map (kbd "."))
+              'my/files-dired-toggle-omit))
+  (should (eq (lookup-key dired-mode-map (kbd "^")) 'dired-up-directory))
+  (should (eq (lookup-key dired-mode-map (kbd "RET"))
+              'dired-find-alternate-file)))
 
 ;;; Integrated tools
 (ert-deftest emacs-config/exec-path-from-shell-is-installed-and-configured ()
