@@ -25,6 +25,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-debug.elc \
 	lisp/config-environment.elc \
 	lisp/config-tools.elc \
+	lisp/config-vc.elc \
 	lisp/config-agent.elc \
 	lisp/config-elisp.elc \
 	lisp/config-c.elc \

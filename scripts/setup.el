@@ -35,6 +35,7 @@
     exec-path-from-shell
     vterm
     magit
+    diff-hl
     transient
     with-editor
     paredit

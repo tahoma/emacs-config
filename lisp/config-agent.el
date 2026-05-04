@@ -206,7 +206,7 @@ When Transient is available, show the full command menu. Otherwise fall back to
 opening the generated project context buffer so the prefix remains useful."
   (interactive)
   (if (fboundp 'my/agent-control-transient)
-      (my/agent-control-transient)
+      (call-interactively #'my/agent-control-transient)
     (my/agent-open-project-context)))
 
 (defun my/agent--project-buffer-p (buffer root)

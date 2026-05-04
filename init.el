@@ -24,6 +24,7 @@
 (require 'config-debug)
 (require 'config-environment)
 (require 'config-tools)
+(require 'config-vc)
 (require 'config-agent)
 (require 'config-elisp)
 (require 'config-c)

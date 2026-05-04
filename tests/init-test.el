@@ -60,6 +60,10 @@
 (defvar ibuffer-show-empty-filter-groups)
 (defvar ibuffer-use-other-window)
 (defvar my/buffers-ibuffer-filter-groups)
+(defvar ediff-split-window-function)
+(defvar ediff-window-setup-function)
+(defvar my/vc-diff-hl-enabled)
+(defvar my/vc-smerge-prefix)
 (defvar my/platform-open-bindings-prefix)
 (defvar my/platform-preferred-windows-shells)
 (defvar my/terminal-osc52-copy-enabled)
@@ -149,6 +153,7 @@
 (declare-function my/files-dired-setup "config-files")
 (declare-function my/buffers-ibuffer "config-buffers")
 (declare-function my/buffers-ibuffer-setup "config-buffers")
+(declare-function my/vc-enable-diff-hl "config-vc")
 (declare-function my/platform-apply-defaults "config-platform")
 (declare-function my/platform-clipboard-copy-command "config-platform")
 (declare-function my/platform-clipboard-paste-command "config-platform")
@@ -241,6 +246,7 @@
                      config-debug
                      config-environment
                      config-tools
+                     config-vc
                      config-agent
                      config-elisp
                      config-c
@@ -276,6 +282,7 @@
                                "lisp/config-debug.el"
                                "lisp/config-environment.el"
                                "lisp/config-tools.el"
+                               "lisp/config-vc.el"
                                "lisp/config-agent.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
@@ -347,6 +354,7 @@
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
       (should (string-match-p "lisp/config-debug\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
+      (should (string-match-p "lisp/config-vc\\.elc" makefile))
       (should (string-match-p "lisp/config-agent\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
@@ -1191,6 +1199,32 @@
   (should (require 'magit nil t))
   (should (fboundp 'magit-status))
   (should (eq (lookup-key global-map (kbd "C-c g")) 'magit-status)))
+
+(ert-deftest emacs-config/vc-ediff-and-smerge-defaults-are-enabled ()
+  (should (eq ediff-window-setup-function #'ediff-setup-windows-plain))
+  (should (eq ediff-split-window-function #'split-window-horizontally))
+  (should my/vc-diff-hl-enabled)
+  (should (equal my/vc-smerge-prefix "C-c v")))
+
+(ert-deftest emacs-config/vc-smerge-bindings-are-present ()
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v n")) 'smerge-next))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v p")) 'smerge-prev))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v RET"))
+              'smerge-keep-current))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v a")) 'smerge-keep-all))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v l"))
+              'smerge-keep-lower))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v u"))
+              'smerge-keep-upper))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v ="))
+              'smerge-diff-base-upper))
+  (should (eq (lookup-key smerge-mode-map (kbd "C-c v E")) 'smerge-ediff)))
+
+(ert-deftest emacs-config/setup-installs-vc-helper-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "diff-hl" nil t))))
 
 (ert-deftest emacs-config/vterm-is-installed-compiled-and-bound ()
   (should (require 'vterm nil t))

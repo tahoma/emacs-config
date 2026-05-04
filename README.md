@@ -46,6 +46,8 @@ This repository is meant to live at `~/.emacs.d`.
   hidden generated files, DWIM copy targets, and recursive copy/delete defaults
 - Buffer management: Ibuffer replaces the flat buffer list with grouped
   development, Dired, Magit, terminal, help, and Emacs internal buffers
+- Version-control ergonomics: Ediff uses a single-frame layout, Smerge gets
+  conflict-resolution keys, and diff-hl shows changed lines when installed
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
@@ -104,6 +106,7 @@ libraries:
 - `snippets/`: first-party snippets loaded by `config-snippets.el`
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
+- `config-vc.el`: Ediff, Smerge, and diff-hl version-control ergonomics
 - `config-agent.el`: agent provider registry plus project-root terminal helpers
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
