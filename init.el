@@ -43,6 +43,30 @@
 (recentf-mode 1)
 (electric-pair-mode 1)
 
+(require 'project)
+
+(defun my/project-root ()
+  "Return the current project root, or `default-directory'."
+  (let ((project (project-current nil)))
+    (if project
+        (project-root project)
+      default-directory)))
+
+(defun my/vterm-project ()
+  "Open `vterm' in the current project root."
+  (interactive)
+  (let ((default-directory (my/project-root)))
+    (vterm)))
+
+(use-package vterm
+  :init
+  (setq vterm-always-compile-module t)
+  :commands (vterm my/vterm-project)
+  :bind (("C-c t" . vterm)
+         ("C-c T" . my/vterm-project))
+  :custom
+  (vterm-max-scrollback 10000))
+
 (use-package magit
   :bind ("C-c g" . magit-status))
 
