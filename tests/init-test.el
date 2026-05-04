@@ -27,6 +27,10 @@
 (defvar my/markup-json-language-server-command)
 (defvar my/markup-mermaid-output-extension)
 (defvar my/markup-yaml-language-server-command)
+(defvar my/python-basic-offset)
+(defvar my/python-fill-column)
+(defvar my/python-format-on-save)
+(defvar my/python-language-server-commands)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -51,6 +55,18 @@
 (declare-function my/markup-mermaid-compile "config-markup")
 (declare-function my/markup-mermaid-compile-command "config-markup")
 (declare-function my/markup-yaml-format-region-or-buffer "config-markup")
+(declare-function my/python-check "config-python")
+(declare-function my/python-command-line "config-python")
+(declare-function my/python-compile-file "config-python")
+(declare-function my/python-executable "config-python")
+(declare-function my/python-format-region-or-buffer "config-python")
+(declare-function my/python-language-server-command "config-python")
+(declare-function my/python-project-root "config-python")
+(declare-function my/python-run-file "config-python")
+(declare-function my/python-test "config-python")
+(declare-function my/python-test-file "config-python")
+(declare-function my/python-tool-command "config-python")
+(declare-function my/python-venv-root "config-python")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -85,7 +101,8 @@
                      config-sql
                      config-rust
                      config-js
-                     config-markup))
+                     config-markup
+                     config-python))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -108,6 +125,7 @@
                                "lisp/config-rust.el"
                                "lisp/config-js.el"
                                "lisp/config-markup.el"
+                               "lisp/config-python.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -131,6 +149,7 @@
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
       (should (string-match-p "lisp/config-js\\.elc" makefile))
       (should (string-match-p "lisp/config-markup\\.elc" makefile))
+      (should (string-match-p "lisp/config-python\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -676,6 +695,108 @@
 (ert-deftest emacs-config/markup-tree-sitter-sources-are-registered ()
   (when (boundp 'treesit-language-source-alist)
     (should (assoc 'yaml treesit-language-source-alist))))
+
+;;; Python development environment
+(ert-deftest emacs-config/python-helper-packages-are-installed ()
+  (dolist (feature '(python pyvenv pip-requirements eglot))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-python-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '("pyvenv" "pip-requirements"))
+      (should (search-forward package nil t)))))
+
+(ert-deftest emacs-config/python-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (python-mode)
+    (should (= python-indent-offset my/python-basic-offset))
+    (should (= tab-width my/python-basic-offset))
+    (should (= fill-column my/python-fill-column))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (memq #'my/python-format-before-save before-save-hook))
+    (should my/python-format-on-save)
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/python-compile-file))
+    (should (eq (local-key-binding (kbd "C-c c")) 'my/python-check))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/python-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c i")) 'my/python-repl))
+    (should (eq (local-key-binding (kbd "C-c r")) 'my/python-run-file))
+    (should (eq (local-key-binding (kbd "C-c t")) 'my/python-test))
+    (should (eq (local-key-binding (kbd "C-c T")) 'my/python-test-file))
+    (should (eq (local-key-binding (kbd "C-c v")) 'my/python-activate-venv))
+    (should (eq (local-key-binding (kbd "C-c V")) 'pyvenv-deactivate))))
+
+(ert-deftest emacs-config/python-project-root-detects-pyproject ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (package-dir (expand-file-name "src/demo" root)))
+    (unwind-protect
+        (progn
+          (make-directory package-dir t)
+          (write-region "[project]\nname = \"demo\"\n"
+                        nil (expand-file-name "pyproject.toml" root)
+                        nil 'silent)
+          (let ((default-directory package-dir))
+            (should (equal (file-truename (my/python-project-root))
+                           (file-truename root)))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/python-venv-root-detects-project-venv ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (venv (expand-file-name ".venv" root)))
+    (unwind-protect
+        (progn
+          (write-region "[project]\nname = \"demo\"\n"
+                        nil (expand-file-name "pyproject.toml" root)
+                        nil 'silent)
+          (make-directory (expand-file-name "bin" venv) t)
+          (let ((default-directory root))
+            (should (equal (file-truename (my/python-venv-root))
+                           (file-truename venv)))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/python-tool-command-prefers-module-fallback ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (my/python-default-interpreter "/path with spaces/python"))
+    (unwind-protect
+        (let ((default-directory root)
+              (exec-path nil))
+          (write-region "[project]\nname = \"demo\"\n"
+                        nil (expand-file-name "pyproject.toml" root)
+                        nil 'silent)
+          (should (equal (my/python-tool-command "pytest")
+                         '("/path with spaces/python" "-m" "pytest")))
+          (should (equal (my/python-command-line
+                          (my/python-tool-command "pytest"))
+                         "/path\\ with\\ spaces/python -m pytest")))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/python-eglot-registers-dynamic-language-server ()
+  (let ((entry (assoc '(python-mode python-ts-mode) eglot-server-programs)))
+    (should entry)
+    (should (functionp (cdr entry)))
+    (should (member (funcall (cdr entry) nil nil)
+                    my/python-language-server-commands))))
+
+(ert-deftest emacs-config/python-file-associations-cover-python-project-files ()
+  (should (memq (assoc-default "module.py" auto-mode-alist #'string-match-p)
+                '(python-mode python-ts-mode)))
+  (should (memq (assoc-default "types.pyi" auto-mode-alist #'string-match-p)
+                '(python-mode python-ts-mode)))
+  (should (eq (assoc-default "requirements.txt" auto-mode-alist #'string-match-p)
+              'pip-requirements-mode))
+  (should (eq (assoc-default "constraints-dev.txt" auto-mode-alist #'string-match-p)
+              'pip-requirements-mode))
+  (should (memq (assoc-default "Pipfile" auto-mode-alist #'string-match-p)
+                '(conf-toml-mode toml-ts-mode))))
+
+(ert-deftest emacs-config/python-tree-sitter-source-is-registered ()
+  (when (boundp 'treesit-language-source-alist)
+    (should (assoc 'python treesit-language-source-alist))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

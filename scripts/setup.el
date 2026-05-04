@@ -42,7 +42,9 @@
     add-node-modules-path
     markdown-mode
     yaml-mode
-    mermaid-mode))
+    mermaid-mode
+    pyvenv
+    pip-requirements))
 
 ;; Mirror init.el's archive configuration so setup can run before init.el has
 ;; loaded and still fetch packages from the same sources.

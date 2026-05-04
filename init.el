@@ -19,6 +19,7 @@
 (require 'config-rust)
 (require 'config-js)
 (require 'config-markup)
+(require 'config-python)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

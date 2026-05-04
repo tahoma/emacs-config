@@ -35,6 +35,9 @@ This repository is meant to live at `~/.emacs.d`.
 - Markup and data-file support: Markdown/GFM editing and preview hooks,
   Mermaid diagram rendering commands, YAML with optional language-server
   support, and JSON helpers for jq and JSON language-server support
+- Python support: virtualenv discovery, optional Eglot language-server support,
+  ruff/black formatting, pytest and ruff project commands, Python REPL helpers,
+  and requirements/pyproject support
 
 ## Layout
 
@@ -55,6 +58,8 @@ libraries:
 - `config-js.el`: JavaScript, TypeScript, TSX, JSON, Prettier, package
   scripts, and TypeScript language-server support
 - `config-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
+- `config-python.el`: Python, virtualenvs, pytest, ruff/black, Eglot, and
+  requirements files
 
 ## Test
 
@@ -132,26 +137,34 @@ fall back gracefully when they are not:
 - JSON filtering/pretty-printing: `jq`
 - JSON/YAML language servers: `vscode-json-language-server` and
   `yaml-language-server`
+- Python tooling: `python3`, `pytest`, `ruff` or `black`, and a language server
+  such as `basedpyright-langserver`, `pyright-langserver`, or `pylsp`
 
 On macOS with Homebrew:
 
 ```sh
-brew install cmake jq node pandoc
+brew install cmake jq node pandoc python ruff uv pipx
 npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+pipx install basedpyright
 ```
 
 On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y build-essential cmake jq nodejs npm pandoc
+sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx
 sudo npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+pipx install basedpyright
 ```
 
 `vscode-langservers-extracted` provides `vscode-json-language-server`. Mermaid
 CLI can be picky about Node versions on older Linux distributions; if the distro
 Node is too old, install a current LTS Node through your preferred Node version
 manager and rerun the `npm install -g` line.
+
+Python project tools such as `pytest`, `ruff`, and `black` are usually best kept
+inside each project's virtualenv. The config will find them in `.venv/bin`
+automatically when they are installed there.
 
 ## Restore
 

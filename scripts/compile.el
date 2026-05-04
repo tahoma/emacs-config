@@ -32,6 +32,7 @@
     "lisp/config-rust.el"
     "lisp/config-js.el"
     "lisp/config-markup.el"
+    "lisp/config-python.el"
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"

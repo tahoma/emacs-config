@@ -16,6 +16,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-rust.elc \
 	lisp/config-js.elc \
 	lisp/config-markup.elc \
+	lisp/config-python.elc \
 	scripts/compile.elc \
 	scripts/setup.elc \
 	tests/init-test.elc
