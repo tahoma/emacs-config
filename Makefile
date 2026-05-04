@@ -9,6 +9,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/tahoma-project.elc \
 	lisp/tahoma-tools.elc \
 	lisp/tahoma-elisp.elc \
+	lisp/tahoma-embedded.elc \
 	scripts/compile.elc \
 	scripts/setup.elc \
 	tests/init-test.elc

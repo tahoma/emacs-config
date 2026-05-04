@@ -11,7 +11,11 @@
 
 (defvar recentf-save-file)
 (defvar savehist-file)
+(defvar my/embedded-c-basic-offset)
+(defvar my/embedded-fill-column)
 (declare-function my/project-root "tahoma-project")
+(declare-function my/embedded-default-compile-command "tahoma-embedded")
+(declare-function my/embedded-format-buffer "tahoma-embedded")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -41,7 +45,8 @@
                      tahoma-ui
                      tahoma-project
                      tahoma-tools
-                     tahoma-elisp))
+                     tahoma-elisp
+                     tahoma-embedded))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -59,6 +64,7 @@
                                "lisp/tahoma-project.el"
                                "lisp/tahoma-tools.el"
                                "lisp/tahoma-elisp.el"
+                               "lisp/tahoma-embedded.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -77,6 +83,7 @@
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-embedded\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -201,6 +208,73 @@
               'flymake-goto-next-error))
   (should (eq (lookup-key flymake-mode-map (kbd "M-p"))
               'flymake-goto-prev-error)))
+
+;;; Embedded C and C++ development environment
+(ert-deftest emacs-config/embedded-helper-packages-are-installed ()
+  (dolist (feature '(corfu clang-format cmake-mode eglot))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-embedded-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '(corfu clang-format cmake-mode))
+      (should (search-forward (symbol-name package) nil t)))))
+
+(ert-deftest emacs-config/embedded-c-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (c-mode)
+    (should (= c-basic-offset my/embedded-c-basic-offset))
+    (should (= tab-width my/embedded-c-basic-offset))
+    (should (= fill-column my/embedded-fill-column))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (bound-and-true-p hs-minor-mode))
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/embedded-compile))
+    (should (eq (local-key-binding (kbd "C-c r")) 'my/embedded-recompile))
+    (should (eq (local-key-binding (kbd "C-c f")) 'my/embedded-format-buffer))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))
+    (should (eq (local-key-binding (kbd "C-c d")) 'my/embedded-debug))
+    (should (eq (local-key-binding (kbd "C-c o")) 'ff-find-other-file))))
+
+(ert-deftest emacs-config/embedded-eglot-uses-clangd ()
+  (let ((entry (assoc '(c-mode c-ts-mode c++-mode c++-ts-mode)
+                      eglot-server-programs)))
+    (should entry)
+    (should (equal (car (cdr entry)) "clangd"))
+    (should (member "--background-index" (cdr entry)))
+    (should (member "--clang-tidy" (cdr entry)))))
+
+(ert-deftest emacs-config/embedded-default-build-command-detects-make ()
+  (let ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t))))
+    (unwind-protect
+        (progn
+          (write-region "" nil (expand-file-name "Makefile" root) nil 'silent)
+          (let ((default-directory root))
+            (should (equal (my/embedded-default-compile-command) "make -k"))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/embedded-default-build-command-detects-cmake-build-dir ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (build-dir (expand-file-name "build" root)))
+    (unwind-protect
+        (progn
+          (make-directory build-dir)
+          (write-region "" nil (expand-file-name "Makefile" build-dir)
+                        nil 'silent)
+          (let ((default-directory root))
+            (should (equal (my/embedded-default-compile-command)
+                           "cmake --build build"))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/embedded-file-associations-cover-firmware-files ()
+  (dolist (case '(("main.S" . asm-mode)
+                  ("firmware.ld" . ld-script-mode)
+                  ("debug.gdb" . gdb-script-mode)
+                  ("Kconfig" . conf-mode)))
+    (should (eq (cdr case)
+                (assoc-default (car case) auto-mode-alist #'string-match-p)))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

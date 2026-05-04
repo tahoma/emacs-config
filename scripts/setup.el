@@ -27,7 +27,10 @@
     aggressive-indent
     eros
     macrostep
-    package-lint))
+    package-lint
+    corfu
+    clang-format
+    cmake-mode))
 
 ;; Mirror init.el's archive configuration so setup can run before init.el has
 ;; loaded and still fetch packages from the same sources.

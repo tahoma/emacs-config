@@ -27,6 +27,7 @@
     "lisp/tahoma-project.el"
     "lisp/tahoma-tools.el"
     "lisp/tahoma-elisp.el"
+    "lisp/tahoma-embedded.el"
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"

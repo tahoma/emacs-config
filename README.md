@@ -20,6 +20,9 @@ This repository is meant to live at `~/.emacs.d`.
 - vterm via `C-c t`, plus project-root vterm via `C-c T`
 - Emacs Lisp development support: Helpful, Paredit, Rainbow Delimiters,
   Aggressive Indent, Eros, Macrostep, Package-Lint, and Flymake integration
+- Embedded C/C++ support: clangd through Eglot, Corfu completion,
+  clang-format, CMake mode, project build/debug helpers, and modes for linker
+  scripts, assembly, and GDB command files
 
 ## Layout
 
@@ -32,6 +35,8 @@ libraries:
 - `tahoma-project.el`: project root helpers
 - `tahoma-tools.el`: vterm and Magit
 - `tahoma-elisp.el`: Emacs Lisp development support
+- `tahoma-embedded.el`: embedded C, C++, CMake, compile, format, and debug
+  support
 
 ## Test
 

@@ -14,6 +14,7 @@
 (require 'tahoma-project)
 (require 'tahoma-tools)
 (require 'tahoma-elisp)
+(require 'tahoma-embedded)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
