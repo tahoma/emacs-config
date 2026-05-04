@@ -16,6 +16,7 @@
 (require 'config-completion)
 (require 'config-snippets)
 (require 'config-diagnostics)
+(require 'config-debug)
 (require 'config-environment)
 (require 'config-tools)
 (require 'config-agent)

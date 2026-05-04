@@ -47,6 +47,8 @@
 (defvar my/snippets-directory)
 (defvar my/agent-codex-command)
 (defvar my/agent-save-project-buffers-before-launch)
+(defvar my/debug-dape-buffer-arrangement)
+(defvar my/debug-dape-inlay-hints)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -106,6 +108,7 @@
 (declare-function my/agent-project-vterm "config-agent")
 (declare-function my/agent-run-in-project-vterm "config-agent")
 (declare-function my/agent-save-project-buffers "config-agent")
+(declare-function my/debug-configure-dape "config-debug")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -138,6 +141,7 @@
                      config-completion
                      config-snippets
                      config-diagnostics
+                     config-debug
                      config-environment
                      config-tools
                      config-agent
@@ -167,6 +171,7 @@
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
                                "lisp/config-diagnostics.el"
+                               "lisp/config-debug.el"
                                "lisp/config-environment.el"
                                "lisp/config-tools.el"
                                "lisp/config-agent.el"
@@ -199,6 +204,7 @@
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
+      (should (string-match-p "lisp/config-debug\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
       (should (string-match-p "lisp/config-agent\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
@@ -415,6 +421,34 @@
   (should (eq xref-show-definitions-function 'consult-xref))
   (when (boundp 'xref-search-program)
     (should (eq xref-search-program 'ripgrep))))
+
+;;; Debug adapter protocol support
+(ert-deftest emacs-config/debug-helper-package-is-installed ()
+  (should (require 'dape nil t)))
+
+(ert-deftest emacs-config/setup-installs-debug-helper-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "dape" nil t))))
+
+(ert-deftest emacs-config/debug-defaults-are-portable ()
+  (should (eq my/debug-dape-buffer-arrangement 'right))
+  (should my/debug-dape-inlay-hints))
+
+(ert-deftest emacs-config/debug-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c D d")) 'dape))
+  (should (eq (lookup-key global-map (kbd "C-c D b"))
+              'dape-breakpoint-toggle))
+  (should (eq (lookup-key global-map (kbd "C-c D B"))
+              'dape-breakpoint-remove-all))
+  (should (eq (lookup-key global-map (kbd "C-c D c")) 'dape-continue))
+  (should (eq (lookup-key global-map (kbd "C-c D i")) 'dape-info))
+  (should (eq (lookup-key global-map (kbd "C-c D k")) 'dape-kill))
+  (should (eq (lookup-key global-map (kbd "C-c D n")) 'dape-next))
+  (should (eq (lookup-key global-map (kbd "C-c D r")) 'dape-restart))
+  (should (eq (lookup-key global-map (kbd "C-c D s")) 'dape-step-in))
+  (should (eq (lookup-key global-map (kbd "C-c D o")) 'dape-step-out)))
 
 ;;; Project environment loading
 (ert-deftest emacs-config/environment-helper-package-is-installed ()

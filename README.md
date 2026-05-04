@@ -31,6 +31,8 @@ This repository is meant to live at `~/.emacs.d`.
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
   buffer saving, and copyable file/region context commands
+- Debugging support: optional Dape keybindings for Debug Adapter Protocol
+  sessions across language-specific adapters
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -70,6 +72,7 @@ libraries:
 - `config-snippets.el`: Yasnippet setup and repo-owned snippet directory
 - `config-diagnostics.el`: diagnostics, code navigation, references, rename,
   and language-server action bindings
+- `config-debug.el`: optional Dape/DAP debugging controls
 - `snippets/`: first-party snippets loaded by `config-snippets.el`
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
@@ -160,6 +163,8 @@ fall back gracefully when they are not:
 - Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
 - Project environments: `direnv`
 - Agent workflows: `codex` or another Codex CLI launch command on `PATH`
+- Debugging: language-specific DAP adapters such as `debugpy`,
+  `codelldb`/`lldb-dap`, or JavaScript debug adapters
 - Markdown preview: `pandoc`, `multimarkdown`, or `markdown`
 - Mermaid rendering: `mmdc` from `@mermaid-js/mermaid-cli`
 - JSON filtering/pretty-printing: `jq`

@@ -30,6 +30,7 @@
     corfu
     cape
     yasnippet
+    dape
     envrc
     exec-path-from-shell
     vterm
