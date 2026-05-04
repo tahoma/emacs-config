@@ -25,6 +25,7 @@
   '("lisp/config-package.el"
     "lisp/config-ui.el"
     "lisp/config-editing.el"
+    "lisp/config-undo.el"
     "lisp/config-platform.el"
     "lisp/config-terminal.el"
     "lisp/config-project.el"

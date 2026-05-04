@@ -36,6 +36,7 @@
     vterm
     magit
     diff-hl
+    vundo
     transient
     with-editor
     paredit

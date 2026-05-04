@@ -39,6 +39,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Editing hygiene: generated backup/auto-save files under `var/`,
   save-place, auto-revert, long-line protection, delete-selection behavior, and
   code-buffer whitespace cleanup
+- Visual undo: Vundo on `C-x u` and `C-c u` exposes the undo history as a
+  navigable tree while preserving built-in undo commands
 - Platform integration: guarded macOS, GNU/Linux, WSL, and Windows defaults for
   modifier keys, Dired, external open/reveal commands, terminal clipboards,
   browser launchers, trash behavior, and shell selection
@@ -96,6 +98,7 @@ libraries:
 - `config-ui.el`: basic interface defaults and Helpful
 - `config-editing.el`: editing state, generated-file locations, auto-revert,
   and code-buffer whitespace hygiene
+- `config-undo.el`: Vundo visual undo tree bindings and display defaults
 - `config-platform.el`: OS-specific host integration guarded by `system-type`
 - `config-terminal.el`: terminal-frame behavior for SSH, `emacsclient -t`, and
   CLI editor sessions

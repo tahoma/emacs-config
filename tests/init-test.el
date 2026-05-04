@@ -47,6 +47,8 @@
 (defvar my/editing-backup-directory)
 (defvar my/editing-fill-column)
 (defvar my/editing-var-directory)
+(defvar my/undo-vundo-prefix)
+(defvar my/undo-vundo-window-max-height)
 (defvar my/workspace-enable-tab-bar)
 (defvar my/workspace-tab-bar-show)
 (defvar my/workspace-windmove-wrap-around)
@@ -99,6 +101,12 @@
 (defvar org-return-follows-link)
 (defvar org-startup-folded)
 (defvar register-preview-delay)
+(defvar vundo-ascii-symbols)
+(defvar vundo-compact-display)
+(defvar vundo-glyph-alist)
+(defvar vundo-roll-back-on-quit)
+(defvar vundo-unicode-symbols)
+(defvar vundo-window-max-height)
 (defvar create-lockfiles)
 (defvar git-commit-mode-map)
 (defvar git-commit-setup-hook)
@@ -191,6 +199,8 @@
 (declare-function my/editing-clean-code-whitespace-on-save "config-editing")
 (declare-function my/editing-code-buffer-visuals "config-editing")
 (declare-function my/editing-ensure-runtime-directories "config-editing")
+(declare-function my/undo-configure-vundo "config-undo")
+(declare-function my/undo-vundo-glyph-alist "config-undo")
 (declare-function my/workspace-project-name "config-workspace")
 (declare-function my/workspace-tab-new-for-project "config-workspace")
 (declare-function my/workspace-tab-rename-for-project "config-workspace")
@@ -280,6 +290,7 @@
   (dolist (feature '(config-package
                      config-ui
                      config-editing
+                     config-undo
                      config-platform
                      config-terminal
                      config-project
@@ -320,6 +331,7 @@
       (dolist (relative-file '("lisp/config-package.el"
                                "lisp/config-ui.el"
                                "lisp/config-editing.el"
+                               "lisp/config-undo.el"
                                "lisp/config-platform.el"
                                "lisp/config-terminal.el"
                                "lisp/config-project.el"
@@ -398,6 +410,7 @@
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
+      (should (string-match-p "lisp/config-undo\\.elc" makefile))
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-project-commands\\.elc" makefile))
@@ -557,6 +570,27 @@
     (should show-trailing-whitespace)
     (when (fboundp 'display-fill-column-indicator-mode)
       (should (bound-and-true-p display-fill-column-indicator-mode)))))
+
+(ert-deftest emacs-config/visual-undo-helper-package-is-installed ()
+  (should (require 'vundo nil t)))
+
+(ert-deftest emacs-config/setup-installs-visual-undo-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "vundo" nil t))))
+
+(ert-deftest emacs-config/visual-undo-bindings-and-defaults-are-present ()
+  (should (equal my/undo-vundo-prefix "C-c u"))
+  (should (eq (lookup-key global-map (kbd "C-x u")) 'vundo))
+  (should (eq (lookup-key global-map (kbd "C-c u v")) 'vundo))
+  (should (eq (lookup-key global-map (kbd "C-c u u")) 'undo-only))
+  (should (eq (lookup-key global-map (kbd "C-c u r")) 'undo-redo))
+  (should vundo-compact-display)
+  (should vundo-roll-back-on-quit)
+  (should (= vundo-window-max-height my/undo-vundo-window-max-height))
+  (should (member vundo-glyph-alist
+                  (list vundo-ascii-symbols vundo-unicode-symbols))))
 
 ;;; Platform-specific host integration
 (ert-deftest emacs-config/platform-predicates-identify-system-types ()

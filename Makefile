@@ -13,6 +13,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-package.elc \
 	lisp/config-ui.elc \
 	lisp/config-editing.elc \
+	lisp/config-undo.elc \
 	lisp/config-platform.elc \
 	lisp/config-terminal.elc \
 	lisp/config-project.elc \

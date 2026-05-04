@@ -12,6 +12,7 @@
 (require 'config-package)
 (require 'config-ui)
 (require 'config-editing)
+(require 'config-undo)
 (require 'config-platform)
 (require 'config-terminal)
 (require 'config-project)
