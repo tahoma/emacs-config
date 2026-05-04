@@ -14,7 +14,7 @@
 (require 'tahoma-project)
 (require 'tahoma-tools)
 (require 'tahoma-elisp)
-(require 'tahoma-embedded)
+(require 'tahoma-c)
 (require 'tahoma-sql)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.

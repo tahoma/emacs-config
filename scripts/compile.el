@@ -27,7 +27,7 @@
     "lisp/tahoma-project.el"
     "lisp/tahoma-tools.el"
     "lisp/tahoma-elisp.el"
-    "lisp/tahoma-embedded.el"
+    "lisp/tahoma-c.el"
     "lisp/tahoma-sql.el"
     "init.el"
     "scripts/setup.el"

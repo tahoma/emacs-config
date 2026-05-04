@@ -11,14 +11,14 @@
 
 (defvar recentf-save-file)
 (defvar savehist-file)
-(defvar my/embedded-c-basic-offset)
-(defvar my/embedded-fill-column)
+(defvar my/c-basic-offset)
+(defvar my/c-fill-column)
 (defvar my/sql-default-product)
 (defvar my/sql-fill-column)
 (defvar my/sql-history-file)
 (declare-function my/project-root "tahoma-project")
-(declare-function my/embedded-default-compile-command "tahoma-embedded")
-(declare-function my/embedded-format-buffer "tahoma-embedded")
+(declare-function my/c-default-compile-command "tahoma-c")
+(declare-function my/c-format-buffer "tahoma-c")
 (declare-function my/sql-format-region-or-buffer "tahoma-sql")
 (declare-function my/sql-send-region-or-buffer "tahoma-sql")
 (declare-function my/sql-scratch "tahoma-sql")
@@ -52,7 +52,7 @@
                      tahoma-project
                      tahoma-tools
                      tahoma-elisp
-                     tahoma-embedded
+                     tahoma-c
                      tahoma-sql))
     (should (featurep feature))))
 
@@ -71,7 +71,7 @@
                                "lisp/tahoma-project.el"
                                "lisp/tahoma-tools.el"
                                "lisp/tahoma-elisp.el"
-                               "lisp/tahoma-embedded.el"
+                               "lisp/tahoma-c.el"
                                "lisp/tahoma-sql.el"
                                "init.el"
                                "scripts/setup.el"
@@ -91,7 +91,7 @@
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-embedded\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-c\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
@@ -229,36 +229,36 @@
   (should (eq (lookup-key flymake-mode-map (kbd "M-p"))
               'flymake-goto-prev-error)))
 
-;;; Embedded C and C++ development environment
-(ert-deftest emacs-config/embedded-helper-packages-are-installed ()
+;;; C and C++ development environment
+(ert-deftest emacs-config/c-helper-packages-are-installed ()
   (dolist (feature '(corfu clang-format cmake-mode eglot))
     (should (require feature nil t))))
 
-(ert-deftest emacs-config/setup-installs-embedded-helper-packages ()
+(ert-deftest emacs-config/setup-installs-c-helper-packages ()
   (with-temp-buffer
     (insert-file-contents (expand-file-name "scripts/setup.el"
                                             emacs-config-test-root))
     (dolist (package '(corfu clang-format cmake-mode))
       (should (search-forward (symbol-name package) nil t)))))
 
-(ert-deftest emacs-config/embedded-c-mode-enables-development-defaults ()
+(ert-deftest emacs-config/c-mode-enables-development-defaults ()
   (with-temp-buffer
     (c-mode)
-    (should (= c-basic-offset my/embedded-c-basic-offset))
-    (should (= tab-width my/embedded-c-basic-offset))
-    (should (= fill-column my/embedded-fill-column))
+    (should (= c-basic-offset my/c-basic-offset))
+    (should (= tab-width my/c-basic-offset))
+    (should (= fill-column my/c-fill-column))
     (should (not indent-tabs-mode))
     (should show-trailing-whitespace)
     (should (bound-and-true-p flymake-mode))
     (should (bound-and-true-p hs-minor-mode))
-    (should (eq (local-key-binding (kbd "C-c b")) 'my/embedded-compile))
-    (should (eq (local-key-binding (kbd "C-c r")) 'my/embedded-recompile))
-    (should (eq (local-key-binding (kbd "C-c f")) 'my/embedded-format-buffer))
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/c-compile))
+    (should (eq (local-key-binding (kbd "C-c r")) 'my/c-recompile))
+    (should (eq (local-key-binding (kbd "C-c f")) 'my/c-format-buffer))
     (should (eq (local-key-binding (kbd "C-c e")) 'eglot))
-    (should (eq (local-key-binding (kbd "C-c d")) 'my/embedded-debug))
+    (should (eq (local-key-binding (kbd "C-c d")) 'my/c-debug))
     (should (eq (local-key-binding (kbd "C-c o")) 'ff-find-other-file))))
 
-(ert-deftest emacs-config/embedded-eglot-uses-clangd ()
+(ert-deftest emacs-config/c-eglot-uses-clangd ()
   (let ((entry (assoc '(c-mode c-ts-mode c++-mode c++-ts-mode)
                       eglot-server-programs)))
     (should entry)
@@ -266,16 +266,16 @@
     (should (member "--background-index" (cdr entry)))
     (should (member "--clang-tidy" (cdr entry)))))
 
-(ert-deftest emacs-config/embedded-default-build-command-detects-make ()
+(ert-deftest emacs-config/c-default-build-command-detects-make ()
   (let ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t))))
     (unwind-protect
         (progn
           (write-region "" nil (expand-file-name "Makefile" root) nil 'silent)
           (let ((default-directory root))
-            (should (equal (my/embedded-default-compile-command) "make -k"))))
+            (should (equal (my/c-default-compile-command) "make -k"))))
       (delete-directory root t))))
 
-(ert-deftest emacs-config/embedded-default-build-command-detects-cmake-build-dir ()
+(ert-deftest emacs-config/c-default-build-command-detects-cmake-build-dir ()
   (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
          (build-dir (expand-file-name "build" root)))
     (unwind-protect
@@ -284,13 +284,13 @@
           (write-region "" nil (expand-file-name "Makefile" build-dir)
                         nil 'silent)
           (let ((default-directory root))
-            (should (equal (my/embedded-default-compile-command)
+            (should (equal (my/c-default-compile-command)
                            "cmake --build build"))))
       (delete-directory root t))))
 
-(ert-deftest emacs-config/embedded-file-associations-cover-firmware-files ()
+(ert-deftest emacs-config/c-file-associations-cover-adjacent-tooling-files ()
   (dolist (case '(("main.S" . asm-mode)
-                  ("firmware.ld" . ld-script-mode)
+                  ("linker.ld" . ld-script-mode)
                   ("debug.gdb" . gdb-script-mode)
                   ("Kconfig" . conf-mode)))
     (should (eq (cdr case)
