@@ -61,6 +61,11 @@
 ;; Force native module compilation during setup instead of on first use.
 (require 'vterm)
 
+;; Freshen local byte-compiled files after dependencies and native modules are
+;; ready. This keeps a fresh clone fast without checking generated .elc files
+;; into git.
+(load (expand-file-name "scripts/compile.el" emacs-config-setup-root) nil t)
+
 (message "Emacs config setup complete")
 
 ;;; setup.el ends here

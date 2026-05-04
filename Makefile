@@ -1,6 +1,9 @@
 EMACS ?= emacs
 
-.PHONY: setup test
+.PHONY: compile setup test
+
+compile:
+	$(EMACS) -Q --batch -l scripts/compile.el
 
 setup:
 	$(EMACS) -Q --batch -l scripts/setup.el

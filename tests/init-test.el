@@ -9,6 +9,10 @@
 
 (require 'ert)
 
+(defvar recentf-save-file)
+(defvar savehist-file)
+(declare-function my/project-root "init")
+
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
 (defconst emacs-config-test-root
@@ -31,6 +35,23 @@
 ;;; Startup and package-management contract
 (ert-deftest emacs-config/provides-init-feature ()
   (should (featurep 'init)))
+
+(ert-deftest emacs-config/compile-helper-knows-first-party-files ()
+  (let ((compile-helper (expand-file-name "scripts/compile.el"
+                                          emacs-config-test-root)))
+    (should (file-exists-p compile-helper))
+    (with-temp-buffer
+      (insert-file-contents compile-helper)
+      (dolist (relative-file '("init.el"
+                               "scripts/setup.el"
+                               "scripts/compile.el"
+                               "tests/init-test.el"))
+        (should (search-forward (prin1-to-string relative-file) nil t))))))
+
+(ert-deftest emacs-config/compiled-artifacts-are-ignored ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name ".gitignore" emacs-config-test-root))
+    (should (search-forward "*.elc" nil t))))
 
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)
