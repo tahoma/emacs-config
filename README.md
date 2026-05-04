@@ -27,6 +27,9 @@ This repository is meant to live at `~/.emacs.d`.
   sqlformat, sqlup-mode, sql-indent, and optional SQL language-server support
 - Rust support: rust-mode with tree-sitter upgrade path, rust-analyzer through
   Eglot, rustfmt-on-save, Cargo helpers, and Cargo.toml support
+- JavaScript/TypeScript support: JS, TS, TSX, JSON, TypeScript language server
+  through Eglot, project-local Prettier formatting, node_modules/.bin, and
+  package-manager script helpers
 
 ## Layout
 
@@ -44,6 +47,8 @@ libraries:
   connection helpers
 - `tahoma-rust.el`: Rust, Cargo, rustfmt, rust-analyzer, and Cargo.toml
   support
+- `tahoma-js.el`: JavaScript, TypeScript, TSX, JSON, Prettier, package
+  scripts, and TypeScript language-server support
 
 ## Test
 

@@ -19,6 +19,9 @@
 (defvar my/rust-basic-offset)
 (defvar my/rust-fill-column)
 (defvar my/rust-format-on-save)
+(defvar my/js-basic-offset)
+(defvar my/js-fill-column)
+(defvar my/js-format-on-save)
 (declare-function my/project-root "tahoma-project")
 (declare-function my/c-default-compile-command "tahoma-c")
 (declare-function my/c-format-buffer "tahoma-c")
@@ -28,6 +31,10 @@
 (declare-function my/rust-cargo-command-line "tahoma-rust")
 (declare-function my/rust-cargo-root "tahoma-rust")
 (declare-function my/rust-format-buffer "tahoma-rust")
+(declare-function my/js-detect-package-manager "tahoma-js")
+(declare-function my/js-format-region-or-buffer "tahoma-js")
+(declare-function my/js-package-script-command "tahoma-js")
+(declare-function my/js-project-root "tahoma-js")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -60,7 +67,8 @@
                      tahoma-elisp
                      tahoma-c
                      tahoma-sql
-                     tahoma-rust))
+                     tahoma-rust
+                     tahoma-js))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -81,6 +89,7 @@
                                "lisp/tahoma-c.el"
                                "lisp/tahoma-sql.el"
                                "lisp/tahoma-rust.el"
+                               "lisp/tahoma-js.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -102,6 +111,7 @@
       (should (string-match-p "lisp/tahoma-c\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-rust\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-js\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -430,6 +440,109 @@
   (when (boundp 'treesit-language-source-alist)
     (should (assoc 'rust treesit-language-source-alist))
     (should (assoc 'toml treesit-language-source-alist))))
+
+;;; JavaScript and TypeScript development environment
+(ert-deftest emacs-config/js-helper-packages-are-installed ()
+  (dolist (feature '(typescript-mode web-mode json-mode add-node-modules-path eglot))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-js-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '("typescript-mode"
+                       "web-mode"
+                       "json-mode"
+                       "add-node-modules-path"))
+      (should (search-forward package nil t)))))
+
+(ert-deftest emacs-config/js-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (js-mode)
+    (should (= js-indent-level my/js-basic-offset))
+    (should (= tab-width my/js-basic-offset))
+    (should (= fill-column my/js-fill-column))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (memq #'my/js-format-before-save before-save-hook))
+    (should my/js-format-on-save)
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/js-build))
+    (should (eq (local-key-binding (kbd "C-c c")) 'my/js-run-script))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/js-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c i")) 'my/js-install))
+    (should (eq (local-key-binding (kbd "C-c l")) 'my/js-lint))
+    (should (eq (local-key-binding (kbd "C-c r")) 'my/js-start))
+    (should (eq (local-key-binding (kbd "C-c t")) 'my/js-test))))
+
+(ert-deftest emacs-config/typescript-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (typescript-mode)
+    (should (= typescript-indent-level my/js-basic-offset))
+    (should (= tab-width my/js-basic-offset))
+    (should (memq #'my/js-format-before-save before-save-hook))
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/js-build))))
+
+(ert-deftest emacs-config/js-project-root-detects-package-json ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (src (expand-file-name "src" root)))
+    (unwind-protect
+        (progn
+          (make-directory src)
+          (write-region "{\"scripts\":{\"test\":\"node test.js\"}}\n"
+                        nil (expand-file-name "package.json" root) nil 'silent)
+          (let ((default-directory src))
+            (should (equal (file-truename (my/js-project-root))
+                           (file-truename root)))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/js-package-manager-detects-lockfiles ()
+  (let ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t))))
+    (unwind-protect
+        (let ((default-directory root))
+          (write-region "{}\n" nil (expand-file-name "package.json" root)
+                        nil 'silent)
+          (should (equal (my/js-detect-package-manager) "npm"))
+          (write-region "" nil (expand-file-name "pnpm-lock.yaml" root)
+                        nil 'silent)
+          (should (equal (my/js-detect-package-manager) "pnpm")))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/js-package-script-command-uses-detected-manager ()
+  (let ((my/js-package-manager "npm"))
+    (should (equal (my/js-package-script-command "build")
+                   "npm run build")))
+  (let ((my/js-package-manager "yarn"))
+    (should (equal (my/js-package-script-command "test:unit")
+                   "yarn test\\:unit"))))
+
+(ert-deftest emacs-config/js-eglot-uses-typescript-language-server ()
+  (let ((entry (assoc '(js-mode js-ts-mode js-jsx-mode
+                               typescript-mode typescript-ts-mode
+                               tsx-ts-mode web-mode)
+                      eglot-server-programs)))
+    (should entry)
+    (should (equal (cdr entry)
+                   '("typescript-language-server" "--stdio")))))
+
+(ert-deftest emacs-config/js-file-associations-cover-js-ts-json-files ()
+  (should (memq (assoc-default "index.js" auto-mode-alist #'string-match-p)
+                '(js-mode js-ts-mode)))
+  (should (memq (assoc-default "component.jsx" auto-mode-alist #'string-match-p)
+                '(js-jsx-mode js-ts-mode)))
+  (should (memq (assoc-default "app.ts" auto-mode-alist #'string-match-p)
+                '(typescript-mode typescript-ts-mode)))
+  (should (memq (assoc-default "view.tsx" auto-mode-alist #'string-match-p)
+                '(web-mode tsx-ts-mode)))
+  (should (memq (assoc-default "package.json" auto-mode-alist #'string-match-p)
+                '(json-mode json-ts-mode))))
+
+(ert-deftest emacs-config/js-tree-sitter-sources-are-registered ()
+  (when (boundp 'treesit-language-source-alist)
+    (dolist (language '(javascript typescript tsx json))
+      (should (assoc language treesit-language-source-alist)))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

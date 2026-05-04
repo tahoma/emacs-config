@@ -30,6 +30,7 @@
     "lisp/tahoma-c.el"
     "lisp/tahoma-sql.el"
     "lisp/tahoma-rust.el"
+    "lisp/tahoma-js.el"
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"

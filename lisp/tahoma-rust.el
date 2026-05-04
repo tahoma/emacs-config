@@ -13,6 +13,7 @@
 (require 'flymake)
 (require 'subr-x)
 (require 'tahoma-project)
+(require 'treesit nil t)
 (require 'use-package)
 
 (defvar rust-format-on-save)

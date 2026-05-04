@@ -17,6 +17,7 @@
 (require 'tahoma-c)
 (require 'tahoma-sql)
 (require 'tahoma-rust)
+(require 'tahoma-js)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
