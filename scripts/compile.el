@@ -29,6 +29,7 @@
     "lisp/config-terminal.el"
     "lisp/config-project.el"
     "lisp/config-project-commands.el"
+    "lisp/config-navigation.el"
     "lisp/config-workspace.el"
     "lisp/config-files.el"
     "lisp/config-buffers.el"

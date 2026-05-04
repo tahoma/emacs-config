@@ -81,6 +81,12 @@
 (defvar my/terminal-xterm-key-decodes)
 (defvar my/project-command-defaults)
 (defvar my/project-command-history)
+(defvar my/navigation-bookmark-file)
+(defvar my/navigation-prefix)
+(defvar my/navigation-register-preview-delay)
+(defvar bookmark-default-file)
+(defvar bookmark-save-flag)
+(defvar register-preview-delay)
 (defvar create-lockfiles)
 (defvar git-commit-mode-map)
 (defvar git-commit-setup-hook)
@@ -108,6 +114,7 @@
 (declare-function my/project-command-read "config-project-commands")
 (declare-function my/project-command-repeat "config-project-commands")
 (declare-function my/project-command-run "config-project-commands")
+(declare-function my/navigation-ensure-runtime-directory "config-navigation")
 (declare-function my/tools-import-shell-environment-p "config-tools")
 (declare-function my/c-default-compile-command "config-c")
 (declare-function my/c-format-buffer "config-c")
@@ -254,6 +261,7 @@
                      config-terminal
                      config-project
                      config-project-commands
+                     config-navigation
                      config-workspace
                      config-files
                      config-buffers
@@ -292,6 +300,7 @@
                                "lisp/config-terminal.el"
                                "lisp/config-project.el"
                                "lisp/config-project-commands.el"
+                               "lisp/config-navigation.el"
                                "lisp/config-workspace.el"
                                "lisp/config-files.el"
                                "lisp/config-buffers.el"
@@ -367,6 +376,7 @@
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-project-commands\\.elc" makefile))
+      (should (string-match-p "lisp/config-navigation\\.elc" makefile))
       (should (string-match-p "lisp/config-workspace\\.elc" makefile))
       (should (string-match-p "lisp/config-files\\.elc" makefile))
       (should (string-match-p "lisp/config-buffers\\.elc" makefile))
@@ -1171,6 +1181,33 @@
                                "pytest" "ruff check ."))
               (should (member command commands)))))
       (delete-directory root t))))
+
+;;; Bookmarks and registers
+(ert-deftest emacs-config/navigation-bookmarks-and-registers-are-configured ()
+  (should (equal my/navigation-prefix "C-c n"))
+  (should (string-prefix-p (expand-file-name "var/" emacs-config-test-root)
+                           my/navigation-bookmark-file))
+  (should (file-directory-p (file-name-directory my/navigation-bookmark-file)))
+  (should (equal bookmark-default-file my/navigation-bookmark-file))
+  (should (equal bookmark-save-flag 1))
+  (when (boundp 'register-preview-delay)
+    (should (= register-preview-delay my/navigation-register-preview-delay)))
+  (dolist (binding '(("C-c n b" . bookmark-set)
+                     ("C-c n j" . bookmark-jump)
+                     ("C-c n l" . list-bookmarks)
+                     ("C-c n d" . bookmark-delete)
+                     ("C-c n R" . bookmark-rename)
+                     ("C-c n S" . bookmark-save)
+                     ("C-c n s" . point-to-register)
+                     ("C-c n r" . jump-to-register)
+                     ("C-c n v" . view-register)
+                     ("C-c n i" . insert-register)
+                     ("C-c n x" . copy-to-register)
+                     ("C-c n a" . append-to-register)
+                     ("C-c n w" . window-configuration-to-register)
+                     ("C-c n f" . frameset-to-register)))
+    (should (eq (lookup-key global-map (kbd (car binding)))
+                (cdr binding)))))
 
 ;;; Workspace and window ergonomics
 (ert-deftest emacs-config/workspace-window-and-tab-defaults-are-enabled ()
