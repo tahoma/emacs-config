@@ -1,4 +1,5 @@
 custom.el
+emacs-mcp-stdio.sh
 .cache/
 auto-save-list/
 backups/

@@ -37,6 +37,8 @@
     magit
     diff-hl
     vundo
+    mcp-server-lib
+    elisp-dev-mcp
     transient
     with-editor
     paredit
@@ -89,6 +91,11 @@
 ;; Load the real config after packages are present. This catches configuration
 ;; errors during setup instead of deferring them to the next GUI launch.
 (load (expand-file-name "init.el" emacs-config-setup-root) nil t)
+
+;; Install the stdio bridge used by external MCP clients. It is generated local
+;; state, not a file that should be committed to this repository.
+(when (fboundp 'my/mcp-install-stdio-script)
+  (my/mcp-install-stdio-script))
 
 ;; Force native module compilation during setup instead of on first use.
 (require 'vterm)

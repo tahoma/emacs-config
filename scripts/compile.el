@@ -42,6 +42,7 @@
     "lisp/config-environment.el"
     "lisp/config-tools.el"
     "lisp/config-vc.el"
+    "lisp/config-mcp.el"
     "lisp/config-agent.el"
     "lisp/config-elisp.el"
     "lisp/config-c.el"

@@ -124,10 +124,17 @@
 (defvar my/agent-project-context-files)
 (defvar my/agent-project-context-status-limit)
 (defvar my/agent-save-project-buffers-before-launch)
+(defvar my/mcp-elisp-dev-allowed-dirs)
+(defvar my/mcp-elisp-dev-init-function)
+(defvar my/mcp-elisp-dev-stop-function)
+(defvar my/mcp-install-directory)
+(defvar my/mcp-server-id)
+(defvar my/mcp-server-name)
 (defvar my/debug-dape-buffer-arrangement)
 (defvar my/debug-dape-inlay-hints)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
+(defvar elisp-dev-mcp-additional-allowed-dirs)
 (declare-function my/project-root "config-project")
 (declare-function my/project-command-candidates "config-project-commands")
 (declare-function my/project-command-detected-candidates "config-project-commands")
@@ -261,6 +268,17 @@
 (declare-function my/agent-project-vterm "config-agent")
 (declare-function my/agent-run-in-project-vterm "config-agent")
 (declare-function my/agent-save-project-buffers "config-agent")
+(declare-function my/mcp-apply-elisp-dev-allowed-dirs "config-mcp")
+(declare-function my/mcp-command-line "config-mcp")
+(declare-function my/mcp-copy-elisp-dev-stdio-command "config-mcp")
+(declare-function my/mcp-disable-elisp-dev "config-mcp")
+(declare-function my/mcp-elisp-dev-stdio-command "config-mcp")
+(declare-function my/mcp-enable-elisp-dev "config-mcp")
+(declare-function my/mcp-install-stdio-script "config-mcp")
+(declare-function my/mcp-package-stdio-script-path "config-mcp")
+(declare-function my/mcp-start "config-mcp")
+(declare-function my/mcp-stdio-script-path "config-mcp")
+(declare-function my/mcp-stop "config-mcp")
 (declare-function my/debug-configure-dape "config-debug")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
@@ -307,6 +325,7 @@
                      config-environment
                      config-tools
                      config-vc
+                     config-mcp
                      config-agent
                      config-elisp
                      config-c
@@ -348,6 +367,7 @@
                                "lisp/config-environment.el"
                                "lisp/config-tools.el"
                                "lisp/config-vc.el"
+                               "lisp/config-mcp.el"
                                "lisp/config-agent.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
@@ -366,7 +386,9 @@
 (ert-deftest emacs-config/compiled-artifacts-are-ignored ()
   (with-temp-buffer
     (insert-file-contents (expand-file-name ".gitignore" emacs-config-test-root))
-    (should (search-forward "*.elc" nil t))))
+    (should (search-forward "*.elc" nil t))
+    (goto-char (point-min))
+    (should (search-forward "emacs-mcp-stdio.sh" nil t))))
 
 (ert-deftest emacs-config/agent-context-files-share-canonical-instructions ()
   (let ((agents-file (expand-file-name "AGENTS.md" emacs-config-test-root))
@@ -425,6 +447,7 @@
       (should (string-match-p "lisp/config-debug\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
       (should (string-match-p "lisp/config-vc\\.elc" makefile))
+      (should (string-match-p "lisp/config-mcp\\.elc" makefile))
       (should (string-match-p "lisp/config-agent\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
@@ -460,9 +483,16 @@
     (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
     (let ((makefile (buffer-string)))
       (should (string-match-p "^USER_INSTALL \\?= 0" makefile))
+      (should (string-match-p "^USER_MCP_INSTALL \\?= 0" makefile))
+      (should (string-match-p "^USER_MCP_CLIENTS \\?= claude codex cursor" makefile))
       (should (string-match-p "^USER_SHELL_FILE \\?=" makefile))
       (should (string-match-p "^USER_TMUX_FILE \\?=" makefile))
+      (should (string-match-p "^USER_EMACS_MCP_SCRIPT \\?=" makefile))
+      (should (string-match-p "^USER_CLAUDE_CONFIG_FILE \\?=" makefile))
+      (should (string-match-p "^USER_CODEX_CONFIG_FILE \\?=" makefile))
+      (should (string-match-p "^USER_CURSOR_MCP_FILE \\?=" makefile))
       (should (string-match-p "^user:.*## .*USER_INSTALL=1" makefile))
+      (should (string-match-p "^user:.*## .*USER_MCP_INSTALL=1" makefile))
       (should (string-match-p "bash scripts/user\\.sh" makefile)))))
 
 (ert-deftest emacs-config/host-helper-is-safe-and-platform-aware ()
@@ -498,8 +528,15 @@
       (insert-file-contents user-helper)
       (let ((script (buffer-string)))
         (should (string-match-p "USER_INSTALL" script))
+        (should (string-match-p "USER_MCP_INSTALL" script))
+        (should (string-match-p "USER_MCP_CLIENTS" script))
+        (should (string-match-p "USER_EMACS_MCP_SCRIPT" script))
+        (should (string-match-p "USER_CLAUDE_CONFIG_FILE" script))
+        (should (string-match-p "USER_CODEX_CONFIG_FILE" script))
+        (should (string-match-p "USER_CURSOR_MCP_FILE" script))
         (should (string-match-p "Dry run" script))
         (should (string-match-p "USER_INSTALL=1" script))
+        (should (string-match-p "USER_MCP_INSTALL=1" script))
         (should (string-match-p "USER_SHELL_FILE" script))
         (should (string-match-p "USER_TMUX_FILE" script))
         (should (string-match-p "emacsclient -t -a" script))
@@ -510,6 +547,10 @@
         (should (string-match-p "/home/linuxbrew/\\.linuxbrew/bin/brew" script))
         (should (string-match-p "set-clipboard" script))
         (should (string-match-p "terminal-features" script))
+        (should (string-match-p "claude mcp add" script))
+        (should (string-match-p "codex mcp add" script))
+        (should (string-match-p "\\.cursor/mcp\\.json" script))
+        (should (string-match-p "elisp-dev-mcp-enable" script))
         (should (string-match-p "install_block" script))))))
 
 (ert-deftest emacs-config/package-archives-include-melpa ()
@@ -1081,6 +1122,58 @@
   (should (eq (lookup-key global-map (kbd "C-c E e"))
               'my/environment-enable-envrc))
   (should (eq (lookup-key global-map (kbd "C-c E r")) 'envrc-reload)))
+
+;;; MCP endpoint support for external agents
+(ert-deftest emacs-config/mcp-helper-packages-are-installed ()
+  (should (require 'mcp-server-lib nil t))
+  (should (require 'mcp-server-lib-commands nil t))
+  (should (require 'elisp-dev-mcp nil t)))
+
+(ert-deftest emacs-config/setup-installs-mcp-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '("mcp-server-lib" "elisp-dev-mcp"))
+      (should (search-forward package nil t)))
+    (should (search-forward "my/mcp-install-stdio-script" nil t))))
+
+(ert-deftest emacs-config/mcp-defaults-and-stdio-command-are-portable ()
+  (should (equal my/mcp-server-name "elisp-dev"))
+  (should (equal my/mcp-server-id "elisp-dev-mcp"))
+  (should (equal my/mcp-elisp-dev-init-function "elisp-dev-mcp-enable"))
+  (should (equal my/mcp-elisp-dev-stop-function "elisp-dev-mcp-disable"))
+  (should (equal my/mcp-install-directory user-emacs-directory))
+  (should (equal (my/mcp-stdio-script-path)
+                 (expand-file-name "emacs-mcp-stdio.sh"
+                                   user-emacs-directory)))
+  (should (equal (my/mcp-elisp-dev-stdio-command)
+                 (list (my/mcp-stdio-script-path)
+                       "--init-function=elisp-dev-mcp-enable"
+                       "--stop-function=elisp-dev-mcp-disable"
+                       "--server-id=elisp-dev-mcp")))
+  (should (string-match-p "emacs-mcp-stdio\\.sh"
+                          (my/mcp-command-line
+                           (my/mcp-elisp-dev-stdio-command)))))
+
+(ert-deftest emacs-config/mcp-elisp-dev-allowed-dirs-are-first-party ()
+  (my/mcp-apply-elisp-dev-allowed-dirs)
+  (dolist (relative-directory '("lisp/" "scripts/" "tests/"))
+    (should (member (file-name-as-directory
+                     (expand-file-name relative-directory
+                                       emacs-config-test-root))
+                    elisp-dev-mcp-additional-allowed-dirs))))
+
+(ert-deftest emacs-config/mcp-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c a m s")) 'my/mcp-start))
+  (should (eq (lookup-key global-map (kbd "C-c a m x")) 'my/mcp-stop))
+  (should (eq (lookup-key global-map (kbd "C-c a m i"))
+              'my/mcp-install-stdio-script))
+  (should (eq (lookup-key global-map (kbd "C-c a m c"))
+              'my/mcp-copy-elisp-dev-stdio-command))
+  (should (eq (lookup-key global-map (kbd "C-c a m d"))
+              'mcp-server-lib-describe-setup))
+  (should (eq (lookup-key global-map (kbd "C-c a m M"))
+              'mcp-server-lib-show-metrics)))
 
 ;;; Agentic development workflow
 (ert-deftest emacs-config/agent-defaults-are-portable ()

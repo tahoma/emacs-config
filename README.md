@@ -61,6 +61,9 @@ This repository is meant to live at `~/.emacs.d`.
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
   launch helpers, project buffer saving, and copyable file/region/project
   context commands
+- MCP endpoint support: external agents can connect to the running Emacs daemon
+  through `mcp-server-lib` and `elisp-dev-mcp` for read-only Elisp docs,
+  definitions, variable metadata, Info lookup, and source inspection
 - Debugging support: optional Dape keybindings for Debug Adapter Protocol
   sessions across language-specific adapters
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
@@ -122,6 +125,7 @@ libraries:
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
 - `config-vc.el`: Ediff, Smerge, and diff-hl version-control ergonomics
+- `config-mcp.el`: MCP stdio bridge helpers and Elisp development MCP tools
 - `config-agent.el`: agent provider registry plus project-root terminal helpers
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
@@ -167,6 +171,28 @@ Use `C-c a p` to copy generated project context for an agent, or `C-c a P` to
 open that context in a review buffer. The generated context includes the project
 root, git branch/status, and project instruction files such as `AGENTS.md`,
 `CLAUDE.md`, Cursor rules, and `README.md`.
+
+## Emacs As MCP Endpoint
+
+External agents can also reach into Emacs through MCP. `make setup` installs
+the `mcp-server-lib` and `elisp-dev-mcp` packages, installs the local stdio
+bridge at `~/.emacs.d/emacs-mcp-stdio.sh`, and keeps that generated script out
+of git. Start an Emacs daemon, then run `M-x my/mcp-start` before asking an MCP
+client to use the tools. Stop it with `M-x my/mcp-stop` when done.
+
+The `elisp-dev-mcp` server is intentionally read-focused. It exposes tools for
+Elisp function docs, function definitions, variable metadata without values,
+Info node lookup, and source reads from trusted Emacs/package directories. This
+config also allows first-party source under `lisp/`, `scripts/`, and `tests/`.
+
+Useful bindings:
+
+- `C-c a m s`: start the Emacs MCP server and enable Elisp tools
+- `C-c a m x`: disable Elisp tools and stop the MCP server
+- `C-c a m i`: reinstall the stdio bridge script
+- `C-c a m c`: copy the raw stdio command for another MCP client
+- `C-c a m d`: describe registered MCP tools/resources
+- `C-c a m M`: show MCP usage metrics
 
 ## Test
 
@@ -217,7 +243,7 @@ authentication, or per-user shell profile settings.
 ## User Setup
 
 Show whether user shell settings are configured for terminal Emacs, CLI editor
-workflows, and tmux:
+workflows, tmux, and external MCP clients:
 
 ```sh
 make user
@@ -228,6 +254,21 @@ and `~/.tmux.conf` with managed, idempotent blocks, opt in explicitly:
 
 ```sh
 make user USER_INSTALL=1
+```
+
+MCP client configuration is also a dry run by default. To register the Emacs
+Elisp MCP server with supported user-level clients, opt in separately:
+
+```sh
+make user USER_MCP_INSTALL=1
+```
+
+By default, the helper reports/applies configuration for Claude Code, Codex, and
+Cursor. Override the list or paths when needed:
+
+```sh
+make user USER_MCP_INSTALL=1 USER_MCP_CLIENTS="claude codex cursor"
+make user USER_EMACS_MCP_SCRIPT=~/.emacs.d/emacs-mcp-stdio.sh USER_CURSOR_MCP_FILE=~/.cursor/mcp.json
 ```
 
 The user helper checks and can configure `EDITOR`, `VISUAL`, `GIT_EDITOR`,
@@ -283,10 +324,12 @@ make test
 
 Run `make host HOST_INSTALL=1` first if you want the helper to install
 host-level external tools. Run `make user USER_INSTALL=1` if you want the helper
-to write shell editor/PATH/tmux settings into your user dotfiles. `make setup`
-refreshes package archives, installs the managed package set, and compiles the
-`vterm` native module, then freshens local `.elc` files. `vterm` requires a
-working compiler toolchain and `cmake` on the machine.
+to write shell editor/PATH/tmux settings into your user dotfiles, and run
+`make user USER_MCP_INSTALL=1` if you want user-scoped agent clients to know
+how to launch the Emacs MCP stdio bridge. `make setup` refreshes package
+archives, installs the managed package set, installs the local MCP stdio bridge,
+and compiles the `vterm` native module, then freshens local `.elc` files.
+`vterm` requires a working compiler toolchain and `cmake` on the machine.
 
 ## Terminal Editor
 

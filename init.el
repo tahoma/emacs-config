@@ -29,6 +29,7 @@
 (require 'config-environment)
 (require 'config-tools)
 (require 'config-vc)
+(require 'config-mcp)
 (require 'config-agent)
 (require 'config-elisp)
 (require 'config-c)
