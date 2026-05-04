@@ -60,6 +60,14 @@ server instead of hanging on a nested editor."
   :type 'boolean
   :group 'my/terminal)
 
+(defcustom my/terminal-mouse-enabled t
+  "When non-nil, enable mouse events in interactive terminal frames.
+Terminal mouse support is most useful over SSH and in `emacsclient -t' frames,
+where it makes scrolling, selecting windows, and point placement feel closer to
+GUI Emacs without changing GUI behavior."
+  :type 'boolean
+  :group 'my/terminal)
+
 (defun my/terminal-frame-p (&optional frame)
   "Return non-nil when FRAME, or the selected frame, is interactive terminal Emacs.
 Batch Emacs is non-graphical too, but it is not a terminal editor session. That
@@ -158,6 +166,19 @@ counterpart to exporting EDITOR in the user's login shell."
                        #'with-editor-shell-command)
     (shell-command-with-editor-mode 1)))
 
+(defun my/terminal-apply-mouse (&optional frame)
+  "Enable terminal mouse support for FRAME when appropriate.
+`xterm-mouse-mode' is a global minor mode, but checking the frame keeps the
+intent clear and avoids enabling terminal escape handling during batch runs."
+  (when (and my/terminal-mouse-enabled
+             (my/terminal-frame-p frame)
+             (fboundp 'xterm-mouse-mode))
+    (xterm-mouse-mode 1)
+    ;; These events are common in xterm-compatible terminals and make wheel
+    ;; scrolling work even when a terminal does not translate them itself.
+    (keymap-global-set "<mouse-4>" #'scroll-down-line)
+    (keymap-global-set "<mouse-5>" #'scroll-up-line)))
+
 (use-package with-editor
   :commands (shell-command-with-editor-mode
              with-editor-async-shell-command
@@ -169,6 +190,8 @@ counterpart to exporting EDITOR in the user's login shell."
 (my/terminal-apply-osc52-clipboard)
 (my/terminal-apply-editor-environment)
 (my/terminal-maybe-start-server)
+(my/terminal-apply-mouse)
+(add-hook 'after-make-frame-functions #'my/terminal-apply-mouse)
 
 (provide 'config-terminal)
 

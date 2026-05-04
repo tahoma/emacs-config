@@ -34,7 +34,7 @@ This repository is meant to live at `~/.emacs.d`.
 - Terminal integration: OSC 52 clipboard copy for terminal frames, including
   SSH sessions where local OS clipboard tools would run on the wrong host,
   plus an `emacsclient -t` editor environment for CLI tools and `with-editor`
-  support for shells launched from Emacs
+  support for shells launched from Emacs, and xterm-compatible mouse support
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
@@ -207,7 +207,9 @@ already running, and it sets the same variables for subprocesses launched from
 inside Emacs. `with-editor` also exports editor variables for `shell`, `eshell`,
 `term`, `vterm`, and one-shot shell commands. `emacsclient -t` keeps Git commits
 and other CLI editor requests inside the current terminal; `-a ""` starts a
-server-backed Emacs if needed.
+server-backed Emacs if needed. In interactive terminal frames, `xterm-mouse-mode`
+is enabled so scrolling and point/window selection work in terminals that
+support mouse escape sequences.
 
 ## Optional External Tools
 
