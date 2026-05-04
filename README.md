@@ -7,6 +7,7 @@ This repository is meant to live at `~/.emacs.d`.
 ## Files
 
 - `init.el`: handwritten Emacs configuration
+- `lisp/`: first-party byte-compilable configuration libraries
 - `.gitignore`: local Emacs state and generated files to keep out of git
 - `scripts/setup.el`: fresh-machine dependency bootstrap
 - `scripts/compile.el`: byte-compilation helper for first-party ELisp
@@ -19,6 +20,18 @@ This repository is meant to live at `~/.emacs.d`.
 - vterm via `C-c t`, plus project-root vterm via `C-c T`
 - Emacs Lisp development support: Helpful, Paredit, Rainbow Delimiters,
   Aggressive Indent, Eros, Macrostep, Package-Lint, and Flymake integration
+
+## Layout
+
+`init.el` is intentionally small. It adds `lisp/` to `load-path`, requires the
+first-party modules, and loads `custom.el` last. Stable behavior lives in normal
+libraries:
+
+- `tahoma-package.el`: package archives, priorities, and `use-package`
+- `tahoma-ui.el`: basic interface defaults and Helpful
+- `tahoma-project.el`: project root helpers
+- `tahoma-tools.el`: vterm and Magit
+- `tahoma-elisp.el`: Emacs Lisp development support
 
 ## Test
 

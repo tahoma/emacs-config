@@ -17,10 +17,17 @@
     (file-name-directory
      (or load-file-name buffer-file-name)))))
 
+(add-to-list 'load-path (expand-file-name "lisp" emacs-config-compile-root))
+
 ;; Keep this list explicit. Compiling all *.el recursively would wander into
 ;; package directories if ignore rules or directory layout changed later.
 (defconst emacs-config-compile-files
-  '("init.el"
+  '("lisp/tahoma-package.el"
+    "lisp/tahoma-ui.el"
+    "lisp/tahoma-project.el"
+    "lisp/tahoma-tools.el"
+    "lisp/tahoma-elisp.el"
+    "init.el"
     "scripts/setup.el"
     "scripts/compile.el"
     "tests/init-test.el"))

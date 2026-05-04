@@ -11,7 +11,7 @@
 
 (defvar recentf-save-file)
 (defvar savehist-file)
-(declare-function my/project-root "init")
+(declare-function my/project-root "tahoma-project")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -36,13 +36,30 @@
 (ert-deftest emacs-config/provides-init-feature ()
   (should (featurep 'init)))
 
+(ert-deftest emacs-config/provides-first-party-module-features ()
+  (dolist (feature '(tahoma-package
+                     tahoma-ui
+                     tahoma-project
+                     tahoma-tools
+                     tahoma-elisp))
+    (should (featurep feature))))
+
+(ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
+  (should (member (expand-file-name "lisp" emacs-config-test-root)
+                  load-path)))
+
 (ert-deftest emacs-config/compile-helper-knows-first-party-files ()
   (let ((compile-helper (expand-file-name "scripts/compile.el"
                                           emacs-config-test-root)))
     (should (file-exists-p compile-helper))
     (with-temp-buffer
       (insert-file-contents compile-helper)
-      (dolist (relative-file '("init.el"
+      (dolist (relative-file '("lisp/tahoma-package.el"
+                               "lisp/tahoma-ui.el"
+                               "lisp/tahoma-project.el"
+                               "lisp/tahoma-tools.el"
+                               "lisp/tahoma-elisp.el"
+                               "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
                                "tests/init-test.el"))
@@ -59,6 +76,7 @@
     (let ((makefile (buffer-string)))
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
+      (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
