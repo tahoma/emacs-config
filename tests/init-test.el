@@ -16,12 +16,18 @@
 (defvar my/sql-default-product)
 (defvar my/sql-fill-column)
 (defvar my/sql-history-file)
+(defvar my/rust-basic-offset)
+(defvar my/rust-fill-column)
+(defvar my/rust-format-on-save)
 (declare-function my/project-root "tahoma-project")
 (declare-function my/c-default-compile-command "tahoma-c")
 (declare-function my/c-format-buffer "tahoma-c")
 (declare-function my/sql-format-region-or-buffer "tahoma-sql")
 (declare-function my/sql-send-region-or-buffer "tahoma-sql")
 (declare-function my/sql-scratch "tahoma-sql")
+(declare-function my/rust-cargo-command-line "tahoma-rust")
+(declare-function my/rust-cargo-root "tahoma-rust")
+(declare-function my/rust-format-buffer "tahoma-rust")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -53,7 +59,8 @@
                      tahoma-tools
                      tahoma-elisp
                      tahoma-c
-                     tahoma-sql))
+                     tahoma-sql
+                     tahoma-rust))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -73,6 +80,7 @@
                                "lisp/tahoma-elisp.el"
                                "lisp/tahoma-c.el"
                                "lisp/tahoma-sql.el"
+                               "lisp/tahoma-rust.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -93,6 +101,7 @@
       (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-c\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-rust\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -355,6 +364,72 @@
   (let ((entry (assoc 'sql-mode eglot-server-programs)))
     (should entry)
     (should (equal (cdr entry) '("sqls")))))
+
+;;; Rust development environment
+(ert-deftest emacs-config/rust-helper-packages-are-installed ()
+  (dolist (feature '(rust-mode eglot))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-rust-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "rust-mode" nil t))))
+
+(ert-deftest emacs-config/rust-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (rust-mode)
+    (should (= rust-indent-offset my/rust-basic-offset))
+    (should (= tab-width my/rust-basic-offset))
+    (should (= fill-column my/rust-fill-column))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (memq #'my/rust-format-before-save before-save-hook))
+    (should my/rust-format-on-save)
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/rust-cargo-build))
+    (should (eq (local-key-binding (kbd "C-c c")) 'my/rust-cargo-check))
+    (should (eq (local-key-binding (kbd "C-c l")) 'my/rust-cargo-clippy))
+    (should (eq (local-key-binding (kbd "C-c f")) 'my/rust-format-buffer))
+    (should (eq (local-key-binding (kbd "C-c F")) 'my/rust-cargo-fmt))
+    (should (eq (local-key-binding (kbd "C-c r")) 'my/rust-cargo-run))
+    (should (eq (local-key-binding (kbd "C-c t")) 'my/rust-cargo-test))
+    (should (eq (local-key-binding (kbd "C-c C-c")) 'my/rust-cargo))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))))
+
+(ert-deftest emacs-config/rust-cargo-root-detects-nearest-cargo-toml ()
+  (let* ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t)))
+         (src (expand-file-name "src" root)))
+    (unwind-protect
+        (progn
+          (make-directory src)
+          (write-region "[package]\nname = \"demo\"\nversion = \"0.1.0\"\n"
+                        nil (expand-file-name "Cargo.toml" root) nil 'silent)
+          (let ((default-directory src))
+            (should (equal (file-truename (my/rust-cargo-root))
+                           (file-truename root)))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/rust-cargo-command-line-quotes-cargo-binary ()
+  (let ((my/rust-cargo-command "/path with spaces/cargo"))
+    (should (equal (my/rust-cargo-command-line "check")
+                   "/path\\ with\\ spaces/cargo check"))))
+
+(ert-deftest emacs-config/rust-eglot-uses-rust-analyzer ()
+  (let ((entry (assoc '(rust-mode rust-ts-mode) eglot-server-programs)))
+    (should entry)
+    (should (equal (cdr entry) '("rust-analyzer")))))
+
+(ert-deftest emacs-config/rust-file-associations-cover-rust-and-cargo-files ()
+  (should (eq (assoc-default "lib.rs" auto-mode-alist #'string-match-p)
+              'rust-mode))
+  (should (eq (assoc-default "Cargo.toml" auto-mode-alist #'string-match-p)
+              'conf-toml-mode)))
+
+(ert-deftest emacs-config/rust-tree-sitter-sources-are-registered ()
+  (when (boundp 'treesit-language-source-alist)
+    (should (assoc 'rust treesit-language-source-alist))
+    (should (assoc 'toml treesit-language-source-alist))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

@@ -25,6 +25,8 @@ This repository is meant to live at `~/.emacs.d`.
   assembly, and GDB command files
 - SQL support: sql-mode and SQLi connections, query scratch buffers,
   sqlformat, sqlup-mode, sql-indent, and optional SQL language-server support
+- Rust support: rust-mode with tree-sitter upgrade path, rust-analyzer through
+  Eglot, rustfmt-on-save, Cargo helpers, and Cargo.toml support
 
 ## Layout
 
@@ -40,6 +42,8 @@ libraries:
 - `tahoma-c.el`: C, C++, CMake, compile, format, and debug support
 - `tahoma-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
   connection helpers
+- `tahoma-rust.el`: Rust, Cargo, rustfmt, rust-analyzer, and Cargo.toml
+  support
 
 ## Test
 

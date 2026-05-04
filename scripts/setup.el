@@ -33,7 +33,8 @@
     cmake-mode
     sqlformat
     sqlup-mode
-    sql-indent))
+    sql-indent
+    rust-mode))
 
 ;; Mirror init.el's archive configuration so setup can run before init.el has
 ;; loaded and still fetch packages from the same sources.
