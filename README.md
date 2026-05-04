@@ -140,6 +140,52 @@ libraries:
   requirements files
 - `config-treesit.el`: tree-sitter grammar status and install helpers
 
+## Usage Notes
+
+This config is easiest to use as a set of prefix-driven workbenches. Which-Key
+will usually show the next command after a short pause, so start with the
+prefixes and let Emacs remind you of the leaves.
+
+- Use `C-c p` for project work. `C-c p f` finds files, `C-c p g` searches with
+  ripgrep, `C-c p b` switches project buffers, `C-c p c` runs a detected build,
+  test, lint, or run command through `compile`, and `C-c p C` repeats the last
+  project command.
+- Treat compilation buffers as the normal command output surface. Build, test,
+  lint, and language helper commands use clickable diagnostics where possible,
+  and `recompile` keeps the edit-run loop short.
+- In programming buffers, the local bindings are intentionally similar across
+  languages: `C-c e` starts or reconnects Eglot, `C-c f` formats, `C-c b`
+  builds or compiles, `C-c t` tests, and `C-c r` runs when the language has a
+  natural run command. SQL keeps the traditional `C-c C-*` SQLi bindings.
+- Use `C-c x` for code intelligence across languages: actions, definitions,
+  references, rename, and Imenu. These bindings work even when a language module
+  adds its own local build/test keys.
+- Use `C-c a ?` as the agent control plane. `C-c a p` copies project context,
+  `C-c a P` opens it for review, `C-c a a`/`d`/`u` launch Codex, Claude Code,
+  or Cursor Agent from the project root, and `C-c a m s` starts the Emacs MCP
+  endpoint for external agents.
+- Use `C-c T` for a project-root vterm and `C-c t` for a plain vterm. On
+  terminal-heavy machines, run `make user USER_INSTALL=1` so Git and other CLI
+  tools use `emacsclient -t` as their editor.
+- Use Dired as a file-management buffer, not just a browser. `C-c f p` opens
+  the project root, `C-c f d` jumps to the current file, `.` toggles omitted
+  generated files, `(` toggles long listing details, and `C-c C-e` switches to
+  Wdired for bulk renames.
+- Use `C-c g` for Magit, and use the `C-c v` Smerge keys when a conflict buffer
+  is active. Ediff and Smerge are tuned to keep merge work inside one coherent
+  frame.
+- Use `C-c n` for durable navigation with bookmarks and registers, `C-c w` for
+  window and tab workspaces, and `C-x u` when you want Vundo's visual undo tree.
+- Use `C-c o` for local developer notes. Captured tasks, notes, decisions, and
+  debug logs live under `var/notes/`, so they are useful on the machine but stay
+  out of the public config repo.
+- Use `C-c E` for direnv/envrc project environments and `C-c l` to inspect or
+  install tree-sitter grammars.
+- On a new machine, run `make host`, `make user`, `make setup`, and `make test`
+  in that order. Use `HOST_INSTALL=1`, `USER_INSTALL=1`, and
+  `USER_MCP_INSTALL=1` only when you want the helpers to modify the host or user
+  environment.
+
 ## Agent Context
 
 Project-level agent instructions live in `AGENTS.md`. Keep that file concise,

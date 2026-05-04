@@ -424,6 +424,26 @@
       (should (string-match-p "\\.claude/settings\\.local\\.json" gitignore))
       (should (string-match-p "\\.cursor/rules/\\*\\.local\\.mdc" gitignore)))))
 
+(ert-deftest emacs-config/readme-usage-notes-cover-main-workflows ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "README.md" emacs-config-test-root))
+    (let ((readme (buffer-string)))
+      (should (string-match-p "^## Usage Notes" readme))
+      (dolist (text '("C-c p"
+                      "C-c x"
+                      "C-c a \\?"
+                      "C-c a m s"
+                      "C-c T"
+                      "C-c f p"
+                      "C-c g"
+                      "C-c n"
+                      "C-c o"
+                      "C-c E"
+                      "C-c l"
+                      "make host"
+                      "USER_MCP_INSTALL=1"))
+        (should (string-match-p text readme))))))
+
 (ert-deftest emacs-config/make-clean-targets-are-split-by-package-state ()
   (with-temp-buffer
     (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
