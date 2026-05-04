@@ -62,8 +62,9 @@ show_tool_status() {
   show_tools \
     emacs git cmake clangd clang-format rg fd jq node npm pandoc python3 \
     pipx direnv ruff uv basedpyright-langserver typescript-language-server \
-    vscode-json-language-server yaml-language-server mmdc sqlformat codex \
-    claude cursor-agent
+    vscode-json-language-server yaml-language-server mmdc sqlformat \
+    verible-verilog-format verible-verilog-lint verible-verilog-ls \
+    verilator iverilog codex claude cursor-agent
 
   case "$(uname -s)" in
     Darwin)
@@ -92,7 +93,7 @@ setup_macos() {
     fi
   fi
 
-  run_shell "brew install aspell cmake direnv fd jq llvm node pandoc pipx python ripgrep ruff shellcheck uv"
+  run_shell "brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verible verilator"
   run_shell "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
   run_shell "pipx ensurepath"
   run_shell "$(pipx_install_command basedpyright)"
@@ -102,7 +103,7 @@ setup_macos() {
 setup_debian_like() {
   section "Ubuntu/Debian host setup"
   run_shell "sudo apt-get update"
-  run_shell "sudo apt-get install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck wl-clipboard xclip xsel xdg-utils"
+  run_shell "sudo apt-get install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git iverilog jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck verilator wl-clipboard xclip xsel xdg-utils"
   run_shell "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
   run_shell "python3 -m pipx ensurepath"
   run_shell "$(pipx_install_command basedpyright)"
@@ -117,12 +118,13 @@ setup_generic_linux() {
   section "Generic Linux host setup"
   say "This script only knows how to install packages automatically on Ubuntu/Debian-like systems."
   say "Install equivalents with your distribution's package manager:"
-  say "  aspell clang-format clangd cmake direnv fd jq lldb node npm pandoc pipx python3 ripgrep shellcheck wl-clipboard xclip xsel xdg-utils"
+  say "  aspell clang-format clangd cmake direnv fd iverilog jq lldb node npm pandoc pipx python3 ripgrep shellcheck verilator wl-clipboard xclip xsel xdg-utils"
   say "Then install shared language tools:"
   say "  npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
   say "  pipx install basedpyright"
   say "  pipx install ruff"
   say "  pipx install sqlparse"
+  say "Install Verible from your distribution, package manager, or release packages if available."
 }
 
 setup_windows() {

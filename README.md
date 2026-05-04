@@ -75,6 +75,9 @@ This repository is meant to live at `~/.emacs.d`.
 - C/C++ support: clangd through Eglot, Corfu completion, clang-format,
   CMake mode, project build/debug helpers, and modes for linker scripts,
   assembly, and GDB command files
+- Verilog/SystemVerilog support: built-in verilog-mode, project-aware
+  build/lint helpers, optional Verible formatting and language-server support,
+  and Verilator/Icarus lint fallbacks
 - SQL support: sql-mode and SQLi connections, query scratch buffers,
   sqlformat, sqlup-mode, sql-indent, and optional SQL language-server support
 - Rust support: rust-mode with tree-sitter upgrade path, rust-analyzer through
@@ -129,6 +132,8 @@ libraries:
 - `config-agent.el`: agent provider registry plus project-root terminal helpers
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
+- `config-verilog.el`: Verilog/SystemVerilog editing, formatting, lint, and
+  language-server support
 - `config-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
   connection helpers
 - `config-rust.el`: Rust, Cargo, rustfmt, rust-analyzer, and Cargo.toml
@@ -156,7 +161,8 @@ prefixes and let Emacs remind you of the leaves.
 - In programming buffers, the local bindings are intentionally similar across
   languages: `C-c e` starts or reconnects Eglot, `C-c f` formats, `C-c b`
   builds or compiles, `C-c t` tests, and `C-c r` runs when the language has a
-  natural run command. SQL keeps the traditional `C-c C-*` SQLi bindings.
+  natural run command. Verilog/SystemVerilog uses `C-c l` for linting, and SQL
+  keeps the traditional `C-c C-*` SQLi bindings.
 - Use `C-c x` for code intelligence across languages: actions, definitions,
   references, rename, and Imenu. These bindings work even when a language module
   adds its own local build/test keys.
@@ -451,11 +457,13 @@ fall back gracefully when they are not:
   `yaml-language-server`
 - Python tooling: `python3`, `pytest`, `ruff` or `black`, and a language server
   such as `basedpyright-langserver`, `pyright-langserver`, or `pylsp`
+- Verilog/SystemVerilog tooling: `verible-verilog-format`,
+  `verible-verilog-lint`, `verible-verilog-ls`, `verilator`, and `iverilog`
 
 On macOS with Homebrew:
 
 ```sh
-brew install aspell cmake direnv fd jq llvm node pandoc pipx python ripgrep ruff shellcheck uv
+brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verible verilator
 npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 pipx install sqlparse
@@ -465,12 +473,16 @@ On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck wl-clipboard xclip xsel xdg-utils
+sudo apt install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git iverilog jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck verilator wl-clipboard xclip xsel xdg-utils
 sudo npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 pipx install ruff
 pipx install sqlparse
 ```
+
+Verible package availability varies across Ubuntu/Debian releases. Install it
+from your distribution, a third-party package source, or upstream release
+packages when you want Verible formatting, linting, and language-server support.
 
 On Windows with winget from Git Bash or another POSIX-like shell:
 

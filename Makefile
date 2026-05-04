@@ -40,6 +40,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-agent.elc \
 	lisp/config-elisp.elc \
 	lisp/config-c.elc \
+	lisp/config-verilog.elc \
 	lisp/config-sql.elc \
 	lisp/config-rust.elc \
 	lisp/config-js.elc \

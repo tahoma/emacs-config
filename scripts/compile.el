@@ -46,6 +46,7 @@
     "lisp/config-agent.el"
     "lisp/config-elisp.el"
     "lisp/config-c.el"
+    "lisp/config-verilog.el"
     "lisp/config-sql.el"
     "lisp/config-rust.el"
     "lisp/config-js.el"

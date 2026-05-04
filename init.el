@@ -33,6 +33,7 @@
 (require 'config-agent)
 (require 'config-elisp)
 (require 'config-c)
+(require 'config-verilog)
 (require 'config-sql)
 (require 'config-rust)
 (require 'config-js)

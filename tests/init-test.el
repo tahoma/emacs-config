@@ -14,6 +14,16 @@
 (defvar savehist-file)
 (defvar my/c-basic-offset)
 (defvar my/c-fill-column)
+(defvar my/verilog-basic-offset)
+(defvar my/verilog-fill-column)
+(defvar my/verilog-format-on-save)
+(defvar my/verilog-language-server-commands)
+(defvar my/verilog-project-root-files)
+(defvar verilog-case-indent)
+(defvar verilog-indent-level)
+(defvar verilog-indent-level-behavioral)
+(defvar verilog-indent-level-declaration)
+(defvar verilog-indent-level-module)
 (defvar my/sql-default-product)
 (defvar my/sql-fill-column)
 (defvar my/sql-history-file)
@@ -156,6 +166,15 @@
 (declare-function my/tools-import-shell-environment-p "config-tools")
 (declare-function my/c-default-compile-command "config-c")
 (declare-function my/c-format-buffer "config-c")
+(declare-function my/verilog-command-line "config-verilog")
+(declare-function my/verilog-default-build-command "config-verilog")
+(declare-function my/verilog-format-before-save "config-verilog")
+(declare-function my/verilog-format-command "config-verilog")
+(declare-function my/verilog-format-region-or-buffer "config-verilog")
+(declare-function my/verilog-language-server-command "config-verilog")
+(declare-function my/verilog-lint "config-verilog")
+(declare-function my/verilog-lint-command "config-verilog")
+(declare-function my/verilog-project-root "config-verilog")
 (declare-function my/sql-format-region-or-buffer "config-sql")
 (declare-function my/sql-send-region-or-buffer "config-sql")
 (declare-function my/sql-scratch "config-sql")
@@ -329,6 +348,7 @@
                      config-agent
                      config-elisp
                      config-c
+                     config-verilog
                      config-sql
                      config-rust
                      config-js
@@ -371,6 +391,7 @@
                                "lisp/config-agent.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
+                               "lisp/config-verilog.el"
                                "lisp/config-sql.el"
                                "lisp/config-rust.el"
                                "lisp/config-js.el"
@@ -440,6 +461,7 @@
                       "C-c o"
                       "C-c E"
                       "C-c l"
+                      "Verilog/SystemVerilog"
                       "make host"
                       "USER_MCP_INSTALL=1"))
         (should (string-match-p text readme))))))
@@ -470,6 +492,7 @@
       (should (string-match-p "lisp/config-mcp\\.elc" makefile))
       (should (string-match-p "lisp/config-agent\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
+      (should (string-match-p "lisp/config-verilog\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
       (should (string-match-p "lisp/config-js\\.elc" makefile))
@@ -533,6 +556,9 @@
         (should (string-match-p "wl-clipboard" script))
         (should (string-match-p "xdg-utils" script))
         (should (string-match-p "explorer\\.exe" script))
+        (should (string-match-p "verible-verilog-format" script))
+        (should (string-match-p "verilator" script))
+        (should (string-match-p "iverilog" script))
         (should (string-match-p "codex" script))
         (should (string-match-p "claude" script))
         (should (string-match-p "cursor-agent" script))
@@ -1664,6 +1690,77 @@
                   ("linker.ld" . ld-script-mode)
                   ("debug.gdb" . gdb-script-mode)
                   ("Kconfig" . conf-mode)))
+    (should (eq (cdr case)
+                (assoc-default (car case) auto-mode-alist #'string-match-p)))))
+
+;;; Verilog and SystemVerilog development environment
+(ert-deftest emacs-config/verilog-helper-mode-is-available ()
+  (should (require 'verilog-mode nil t)))
+
+(ert-deftest emacs-config/verilog-mode-enables-development-defaults ()
+  (with-temp-buffer
+    (verilog-mode)
+    (should (= verilog-indent-level my/verilog-basic-offset))
+    (should (= verilog-indent-level-module my/verilog-basic-offset))
+    (should (= verilog-indent-level-declaration my/verilog-basic-offset))
+    (should (= verilog-indent-level-behavioral my/verilog-basic-offset))
+    (should (= verilog-case-indent my/verilog-basic-offset))
+    (should (= tab-width my/verilog-basic-offset))
+    (should (= fill-column my/verilog-fill-column))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (not my/verilog-format-on-save))
+    (should (memq #'my/verilog-format-before-save before-save-hook))
+    (should (eq (local-key-binding (kbd "C-c b")) 'my/verilog-build))
+    (should (eq (local-key-binding (kbd "C-c l")) 'my/verilog-lint))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/verilog-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))
+    (should (eq (local-key-binding (kbd "C-c C-a")) 'verilog-auto))))
+
+(ert-deftest emacs-config/verilog-default-build-command-detects-make ()
+  (let ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t))))
+    (unwind-protect
+        (progn
+          (write-region "" nil (expand-file-name "Makefile" root) nil 'silent)
+          (let ((default-directory root))
+            (should (equal (my/verilog-default-build-command) "make -k"))))
+      (delete-directory root t))))
+
+(ert-deftest emacs-config/verilog-lint-command-prefers-common-tools ()
+  (let ((buffer-file-name "/tmp/top.sv"))
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (command)
+                 (and (string= command "verible-verilog-lint") command))))
+      (should (equal (my/verilog-lint-command)
+                     '("verible-verilog-lint" "/tmp/top.sv"))))
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (command)
+                 (and (string= command "verilator") command))))
+      (should (equal (my/verilog-lint-command)
+                     '("verilator" "--lint-only" "-Wall" "/tmp/top.sv"))))
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (command)
+                 (and (string= command "iverilog") command))))
+      (should (equal (my/verilog-lint-command)
+                     '("iverilog" "-Wall" "-tnull" "/tmp/top.sv"))))))
+
+(ert-deftest emacs-config/verilog-language-server-command-selects-installed-server ()
+  (let ((my/verilog-language-server-commands
+         '(("verible-verilog-ls") ("svlangserver" "--stdio"))))
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (command)
+                 (and (string= command "svlangserver") command))))
+      (should (equal (my/verilog-language-server-command)
+                     '("svlangserver" "--stdio"))))))
+
+(ert-deftest emacs-config/verilog-file-associations-cover-hdl-files ()
+  (dolist (case '(("rtl/top.v" . verilog-mode)
+                  ("rtl/top.vh" . verilog-mode)
+                  ("rtl/top.sv" . verilog-mode)
+                  ("rtl/top.svh" . verilog-mode)
+                  ("rtl/assertions.sva" . verilog-mode)))
     (should (eq (cdr case)
                 (assoc-default (car case) auto-mode-alist #'string-match-p)))))
 
