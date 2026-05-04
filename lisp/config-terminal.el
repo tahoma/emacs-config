@@ -11,6 +11,8 @@
 
 (require 'server)
 (require 'subr-x)
+(require 'tramp)
+(require 'config-editing)
 
 (declare-function shell-command-with-editor-mode "with-editor")
 (declare-function with-editor-async-shell-command "with-editor")
@@ -22,6 +24,10 @@
 
 (defvar git-commit-mode-map)
 (defvar ispell-program-name)
+(defvar remote-file-name-inhibit-locks)
+(defvar tramp-auto-save-directory)
+(defvar tramp-default-method)
+(defvar tramp-verbose)
 
 (defgroup my/terminal nil
   "Terminal-frame behavior for this Emacs config."
@@ -81,6 +87,21 @@ GUI Emacs without changing GUI behavior."
 
 (defcustom my/terminal-git-commit-summary-max-length 72
   "Maximum Git commit summary length before `git-commit' warns."
+  :type 'integer
+  :group 'my/terminal)
+
+(defcustom my/terminal-tramp-auto-save-directory
+  (expand-file-name "tramp-auto-save/" my/editing-var-directory)
+  "Local directory for TRAMP auto-save files.
+Remote editing should not scatter generated safety files on servers or pay
+extra network round trips for lock and autosave bookkeeping."
+  :type 'directory
+  :group 'my/terminal)
+
+(defcustom my/terminal-tramp-verbose 1
+  "TRAMP verbosity level for normal editing.
+Level 1 keeps useful connection errors visible without filling buffers during
+routine SSH-backed editing."
   :type 'integer
   :group 'my/terminal)
 
@@ -213,6 +234,27 @@ they are visible even before a commit buffer has run its hooks."
              (my/terminal-spell-command-available-p))
     (flyspell-mode 1)))
 
+(defun my/terminal-remote-buffer-p (&optional buffer)
+  "Return non-nil when BUFFER, or the current buffer, visits a remote file."
+  (with-current-buffer (or buffer (current-buffer))
+    (and buffer-file-name
+         (file-remote-p buffer-file-name))))
+
+(defun my/terminal-remote-editing-setup ()
+  "Apply buffer-local defaults that keep remote editing lightweight."
+  (when (my/terminal-remote-buffer-p)
+    ;; Lock files over TRAMP can create surprising permission or latency
+    ;; problems, and Emacs already has local autosaves under var/ for recovery.
+    (setq-local create-lockfiles nil)))
+
+(defun my/terminal-apply-tramp-defaults ()
+  "Apply SSH-friendly TRAMP defaults for terminal-heavy development."
+  (make-directory my/terminal-tramp-auto-save-directory t)
+  (setq tramp-default-method "ssh"
+        tramp-verbose my/terminal-tramp-verbose
+        tramp-auto-save-directory my/terminal-tramp-auto-save-directory
+        remote-file-name-inhibit-locks t))
+
 (use-package with-editor
   :commands (shell-command-with-editor-mode
              with-editor-async-shell-command
@@ -238,7 +280,9 @@ they are visible even before a commit buffer has run its hooks."
 (my/terminal-apply-editor-environment)
 (my/terminal-maybe-start-server)
 (my/terminal-apply-mouse)
+(my/terminal-apply-tramp-defaults)
 (add-hook 'after-make-frame-functions #'my/terminal-apply-mouse)
+(add-hook 'find-file-hook #'my/terminal-remote-editing-setup)
 
 (provide 'config-terminal)
 

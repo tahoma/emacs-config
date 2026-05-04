@@ -211,7 +211,9 @@ server-backed Emacs if needed. In interactive terminal frames, `xterm-mouse-mode
 is enabled so scrolling and point/window selection work in terminals that
 support mouse escape sequences. Git commit message buffers get a 72-column body
 fill, Auto Fill, Flyspell when a spelling backend exists, and familiar
-`C-c C-c`/`C-c C-k` finish/cancel bindings.
+`C-c C-c`/`C-c C-k` finish/cancel bindings. TRAMP defaults prefer SSH, keep
+remote autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use
+modest logging for normal remote editing.
 
 ## Optional External Tools
 
