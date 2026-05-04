@@ -31,6 +31,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Platform integration: guarded macOS, GNU/Linux, WSL, and Windows defaults for
   modifier keys, Dired, external open/reveal commands, terminal clipboards,
   browser launchers, trash behavior, and shell selection
+- Terminal integration: OSC 52 clipboard copy for terminal frames, including
+  SSH sessions where local OS clipboard tools would run on the wrong host
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
@@ -71,6 +73,8 @@ libraries:
 - `config-editing.el`: editing state, generated-file locations, auto-revert,
   and code-buffer whitespace hygiene
 - `config-platform.el`: OS-specific host integration guarded by `system-type`
+- `config-terminal.el`: terminal-frame behavior for SSH, `emacsclient -t`, and
+  CLI editor sessions
 - `config-project.el`: project root helpers
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
@@ -194,6 +198,8 @@ fall back gracefully when they are not:
 - Platform integration: `open` on macOS, `xdg-open` plus optional
   `wl-copy`/`wl-paste`, `xclip`, or `xsel` on Linux, and Windows
   `explorer.exe`/`clip.exe`/PowerShell where available
+- Terminal clipboard: OSC 52 support is built in. Some terminal multiplexers
+  need clipboard passthrough enabled, such as `set -g set-clipboard on` in tmux.
 - Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
 - Project environments: `direnv`
 - Agent workflows: `codex` or another Codex CLI launch command on `PATH`

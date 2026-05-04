@@ -47,6 +47,8 @@
 (defvar my/editing-var-directory)
 (defvar my/platform-open-bindings-prefix)
 (defvar my/platform-preferred-windows-shells)
+(defvar my/terminal-osc52-copy-enabled)
+(defvar my/terminal-osc52-max-bytes)
 (defvar my/snippets-directory)
 (defvar my/agent-codex-command)
 (defvar my/agent-save-project-buffers-before-launch)
@@ -114,6 +116,11 @@
 (declare-function my/platform-reveal-in-file-manager "config-platform")
 (declare-function my/platform-windows-p "config-platform")
 (declare-function my/platform-wsl-p "config-platform")
+(declare-function my/terminal-frame-p "config-terminal")
+(declare-function my/terminal-apply-osc52-clipboard "config-terminal")
+(declare-function my/terminal-osc52-copy "config-terminal")
+(declare-function my/terminal-osc52-sequence "config-terminal")
+(declare-function my/terminal-osc52-transport "config-terminal")
 (declare-function my/agent-codex "config-agent")
 (declare-function my/agent-codex-available-p "config-agent")
 (declare-function my/agent-codex-with-file "config-agent")
@@ -154,6 +161,7 @@
                      config-ui
                      config-editing
                      config-platform
+                     config-terminal
                      config-project
                      config-completion
                      config-snippets
@@ -185,6 +193,7 @@
                                "lisp/config-ui.el"
                                "lisp/config-editing.el"
                                "lisp/config-platform.el"
+                               "lisp/config-terminal.el"
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
@@ -220,6 +229,7 @@
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
+      (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
@@ -416,6 +426,73 @@
   (should delete-by-moving-to-trash)
   (should (stringp shell-file-name))
   (should (stringp explicit-shell-file-name)))
+
+;;; Terminal-frame behavior
+(ert-deftest emacs-config/terminal-osc52-sequence-encodes-clipboard-text ()
+  (let ((sequence (my/terminal-osc52-sequence "hello" 'direct)))
+    (should (string-prefix-p "\e]52;c;" sequence))
+    (should (string-match-p "aGVsbG8=" sequence))
+    (should (string-suffix-p "\a" sequence))))
+
+(ert-deftest emacs-config/terminal-osc52-transport-detects-multiplexers ()
+  (let ((process-environment '("TMUX=/tmp/tmux-501/default,123,0")))
+    (should (eq (my/terminal-osc52-transport) 'tmux)))
+  (let ((process-environment '("STY=1234.pts-0.host")))
+    (should (eq (my/terminal-osc52-transport) 'screen)))
+  (let ((process-environment nil))
+    (should (eq (my/terminal-osc52-transport) 'direct))))
+
+(ert-deftest emacs-config/terminal-osc52-copy-respects-byte-limit ()
+  (let ((my/terminal-osc52-max-bytes 1)
+        (my/terminal-osc52-copy-enabled t)
+        (sent nil))
+    (cl-letf (((symbol-function 'display-graphic-p)
+               (lambda (&optional frame)
+                 (ignore frame)
+                 nil))
+              ((symbol-function 'send-string-to-terminal)
+               (lambda (string &optional terminal)
+                 (ignore terminal)
+                 (setq sent string))))
+      (let ((noninteractive nil))
+        (should-not (my/terminal-osc52-copy "hello")))
+      (should-not sent))))
+
+(ert-deftest emacs-config/terminal-osc52-copy-mirrors-without-owning-kill-ring ()
+  (let ((my/terminal-osc52-max-bytes 100)
+        (my/terminal-osc52-copy-enabled t)
+        (sent nil))
+    (cl-letf (((symbol-function 'display-graphic-p)
+               (lambda (&optional frame)
+                 (ignore frame)
+                 nil))
+              ((symbol-function 'send-string-to-terminal)
+               (lambda (string &optional terminal)
+                 (ignore terminal)
+                 (setq sent string))))
+      (let ((noninteractive nil))
+        (should-not (my/terminal-osc52-copy "hello")))
+      (should sent))))
+
+(ert-deftest emacs-config/terminal-osc52-copy-is-disabled-in-batch ()
+  (let ((sent nil))
+    (cl-letf (((symbol-function 'send-string-to-terminal)
+               (lambda (string &optional terminal)
+                 (ignore terminal)
+                 (setq sent string))))
+      (should-not (my/terminal-osc52-copy "hello"))
+      (should-not sent))))
+
+(ert-deftest emacs-config/terminal-osc52-copy-installs-cut-function ()
+  (should-not (my/terminal-frame-p))
+  (let ((interprogram-cut-function nil))
+    (cl-letf (((symbol-function 'display-graphic-p)
+               (lambda (&optional frame)
+                 (ignore frame)
+                 nil)))
+      (let ((noninteractive nil))
+        (my/terminal-apply-osc52-clipboard))
+      (should (eq interprogram-cut-function #'my/terminal-osc52-copy)))))
 
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file

@@ -13,6 +13,7 @@
 (require 'config-ui)
 (require 'config-editing)
 (require 'config-platform)
+(require 'config-terminal)
 (require 'config-project)
 (require 'config-completion)
 (require 'config-snippets)
