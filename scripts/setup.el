@@ -29,6 +29,7 @@
     which-key
     corfu
     cape
+    envrc
     exec-path-from-shell
     vterm
     magit

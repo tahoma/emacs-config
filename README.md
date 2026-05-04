@@ -22,6 +22,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Diagnostics and navigation support: consistent Flymake, Xref, Eglot,
   Consult-Imenu, references, rename, and code-action bindings across language
   modules
+- Project environment support: envrc/direnv integration so repository-local
+  `.envrc` files can provide toolchain paths and environment variables to Emacs
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -58,6 +60,7 @@ libraries:
   search, command discovery, and action menus
 - `config-diagnostics.el`: diagnostics, code navigation, references, rename,
   and language-server action bindings
+- `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
@@ -143,6 +146,7 @@ Some language modules use external command-line tools when they are present and
 fall back gracefully when they are not:
 
 - Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
+- Project environments: `direnv`
 - Markdown preview: `pandoc`, `multimarkdown`, or `markdown`
 - Mermaid rendering: `mmdc` from `@mermaid-js/mermaid-cli`
 - JSON filtering/pretty-printing: `jq`
@@ -154,7 +158,7 @@ fall back gracefully when they are not:
 On macOS with Homebrew:
 
 ```sh
-brew install cmake jq node pandoc python ruff uv pipx ripgrep fd
+brew install cmake jq node pandoc python ruff uv pipx ripgrep fd direnv
 npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 ```
@@ -163,7 +167,7 @@ On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx ripgrep fd-find
+sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx ripgrep fd-find direnv
 sudo npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 ```

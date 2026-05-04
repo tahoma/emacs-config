@@ -14,6 +14,7 @@
 (require 'config-project)
 (require 'config-completion)
 (require 'config-diagnostics)
+(require 'config-environment)
 (require 'config-tools)
 (require 'config-elisp)
 (require 'config-c)

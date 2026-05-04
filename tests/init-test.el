@@ -38,6 +38,8 @@
 (defvar corfu-preview-current)
 (defvar my/completion-corfu-count)
 (defvar my/completion-preview-delay)
+(defvar my/environment-auto-enable-direnv)
+(defvar my/environment-direnv-executable)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -82,6 +84,8 @@
 (declare-function my/diagnostics-code-actions "config-diagnostics")
 (declare-function my/diagnostics-list "config-diagnostics")
 (declare-function my/diagnostics-rename "config-diagnostics")
+(declare-function my/environment-direnv-available-p "config-environment")
+(declare-function my/environment-enable-envrc "config-environment")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -112,6 +116,7 @@
                      config-project
                      config-completion
                      config-diagnostics
+                     config-environment
                      config-tools
                      config-elisp
                      config-c
@@ -137,6 +142,7 @@
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
                                "lisp/config-diagnostics.el"
+                               "lisp/config-environment.el"
                                "lisp/config-tools.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
@@ -165,6 +171,7 @@
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
+      (should (string-match-p "lisp/config-environment\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
@@ -317,6 +324,30 @@
   (should (eq xref-show-definitions-function 'consult-xref))
   (when (boundp 'xref-search-program)
     (should (eq xref-search-program 'ripgrep))))
+
+;;; Project environment loading
+(ert-deftest emacs-config/environment-helper-package-is-installed ()
+  (should (require 'envrc nil t)))
+
+(ert-deftest emacs-config/setup-installs-environment-helper-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "envrc" nil t))))
+
+(ert-deftest emacs-config/environment-direnv-defaults-are-portable ()
+  (should (equal my/environment-direnv-executable "direnv"))
+  (should my/environment-auto-enable-direnv)
+  (let ((my/environment-direnv-executable
+         "definitely-not-a-real-direnv-command"))
+    (should-not (my/environment-direnv-available-p))))
+
+(ert-deftest emacs-config/environment-global-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c E a")) 'envrc-allow))
+  (should (eq (lookup-key global-map (kbd "C-c E d")) 'envrc-deny))
+  (should (eq (lookup-key global-map (kbd "C-c E e"))
+              'my/environment-enable-envrc))
+  (should (eq (lookup-key global-map (kbd "C-c E r")) 'envrc-reload)))
 
 ;;; Project helper behavior
 (ert-deftest emacs-config/project-root-falls-back-to-default-directory ()
