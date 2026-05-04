@@ -161,6 +161,8 @@
 (declare-function my/agent-codex-with-file "config-agent")
 (declare-function my/agent-codex-with-region "config-agent")
 (declare-function my/agent-command-line "config-agent")
+(declare-function my/agent-control "config-agent")
+(declare-function my/agent-control-transient "config-agent")
 (declare-function my/agent-copy-file-context "config-agent")
 (declare-function my/agent-copy-project-context "config-agent")
 (declare-function my/agent-copy-region-context "config-agent")
@@ -966,6 +968,17 @@
     (should-not (my/agent-provider-available-p 'claude))
     (should-not (my/agent-provider-available-p 'cursor))))
 
+(ert-deftest emacs-config/agent-control-plane-uses-transient ()
+  (should (require 'transient nil t))
+  (should (fboundp 'my/agent-control))
+  (should (fboundp 'my/agent-control-transient)))
+
+(ert-deftest emacs-config/setup-installs-agent-control-plane-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "transient" nil t))))
+
 (ert-deftest emacs-config/agent-command-line-quotes-arguments ()
   (should (equal (my/agent-command-line
                   '("/path with spaces/codex" "--flag" "two words"))
@@ -1023,6 +1036,7 @@
       (delete-directory root t))))
 
 (ert-deftest emacs-config/agent-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c a ?")) 'my/agent-control))
   (should (eq (lookup-key global-map (kbd "C-c a A")) 'my/agent-launch))
   (should (eq (lookup-key global-map (kbd "C-c a a")) 'my/agent-codex))
   (should (eq (lookup-key global-map (kbd "C-c a d")) 'my/agent-claude))

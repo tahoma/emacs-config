@@ -125,10 +125,12 @@ git for that reason.
 
 ## Agent Control Plane
 
-The `C-c a` prefix gathers agent-facing workflows in one place. `C-c a a`
-launches Codex, `C-c a d` launches Claude Code, `C-c a u` launches Cursor
-Agent, and `C-c a A` prompts for any configured provider. All launchers start in
-the current project root and save modified project buffers first when
+The `C-c a` prefix gathers agent-facing workflows in one place. `C-c a ?`
+opens a Transient control surface for launching agents, gathering context,
+opening Magit, and jumping into a project terminal. `C-c a a` launches Codex,
+`C-c a d` launches Claude Code, `C-c a u` launches Cursor Agent, and `C-c a A`
+prompts for any configured provider. All launchers start in the current project
+root and save modified project buffers first when
 `my/agent-save-project-buffers-before-launch` is non-nil.
 
 Use `C-c a p` to copy generated project context for an agent, or `C-c a P` to

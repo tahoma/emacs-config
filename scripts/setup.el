@@ -35,6 +35,7 @@
     exec-path-from-shell
     vterm
     magit
+    transient
     with-editor
     paredit
     rainbow-delimiters

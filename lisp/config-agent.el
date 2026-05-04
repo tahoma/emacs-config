@@ -200,6 +200,15 @@ only use part of this agent instruction setup."
       (view-mode 1))
     (pop-to-buffer buffer)))
 
+(defun my/agent-control ()
+  "Open the agent control plane.
+When Transient is available, show the full command menu. Otherwise fall back to
+opening the generated project context buffer so the prefix remains useful."
+  (interactive)
+  (if (fboundp 'my/agent-control-transient)
+      (my/agent-control-transient)
+    (my/agent-open-project-context)))
+
 (defun my/agent--project-buffer-p (buffer root)
   "Return non-nil when BUFFER visits a file below ROOT."
   (when-let ((file (buffer-file-name buffer)))
@@ -317,6 +326,31 @@ BUFFER-SUFFIX names the agent-specific buffer when provided."
          ("C-c a L" . my/agent-launch-with-project-context)
          ("C-c a r" . my/agent-codex-with-region)
          ("C-c a t" . my/agent-project-vterm)))
+
+;; Transient gives the agent prefix a real command surface: launch, gather
+;; context, jump to Magit, or open a project terminal without remembering every
+;; individual binding.
+(use-package transient
+  :demand t
+  :bind ("C-c a ?" . my/agent-control)
+  :config
+  (eval
+   '(transient-define-prefix my/agent-control-transient ()
+      "Agent control plane for project-root workflows."
+      [["Launch"
+        ("a" "choose provider" my/agent-launch)
+        ("x" "Codex" my/agent-codex)
+        ("d" "Claude Code" my/agent-claude)
+        ("u" "Cursor Agent" my/agent-cursor)
+        ("L" "context + provider" my/agent-launch-with-project-context)]
+       ["Context"
+        ("p" "copy project" my/agent-copy-project-context)
+        ("P" "open project" my/agent-open-project-context)
+        ("f" "copy file" my/agent-copy-file-context)
+        ("r" "copy region" my/agent-copy-region-context)]
+       ["Project"
+        ("g" "Magit status" magit-status)
+        ("t" "agent vterm" my/agent-project-vterm)]])))
 
 (provide 'config-agent)
 
