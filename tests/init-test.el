@@ -78,6 +78,10 @@
 (declare-function my/completion-consult-line-multi "config-completion")
 (declare-function my/completion-consult-ripgrep "config-completion")
 (declare-function my/completion-project-root "config-completion")
+(declare-function my/diagnostics-buffer "config-diagnostics")
+(declare-function my/diagnostics-code-actions "config-diagnostics")
+(declare-function my/diagnostics-list "config-diagnostics")
+(declare-function my/diagnostics-rename "config-diagnostics")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -107,6 +111,7 @@
                      config-ui
                      config-project
                      config-completion
+                     config-diagnostics
                      config-tools
                      config-elisp
                      config-c
@@ -131,6 +136,7 @@
                                "lisp/config-ui.el"
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
+                               "lisp/config-diagnostics.el"
                                "lisp/config-tools.el"
                                "lisp/config-elisp.el"
                                "lisp/config-c.el"
@@ -158,6 +164,7 @@
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
+      (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
       (should (string-match-p "lisp/config-sql\\.elc" makefile))
       (should (string-match-p "lisp/config-rust\\.elc" makefile))
@@ -277,6 +284,39 @@
   (should (eq (lookup-key global-map (kbd "C-h B"))
               'embark-bindings))
   (should (eq prefix-help-command 'embark-prefix-help-command)))
+
+;;; Diagnostics and code navigation
+(ert-deftest emacs-config/diagnostics-built-in-tools-are-available ()
+  (dolist (feature '(flymake xref eglot consult))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/diagnostics-global-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c ! l"))
+              'my/diagnostics-list))
+  (should (eq (lookup-key global-map (kbd "C-c ! b"))
+              'my/diagnostics-buffer))
+  (should (eq (lookup-key global-map (kbd "C-c ! n"))
+              'flymake-goto-next-error))
+  (should (eq (lookup-key global-map (kbd "C-c ! p"))
+              'flymake-goto-prev-error))
+  (should (eq (lookup-key global-map (kbd "C-c x a"))
+              'my/diagnostics-code-actions))
+  (should (eq (lookup-key global-map (kbd "C-c x d"))
+              'xref-find-definitions))
+  (should (eq (lookup-key global-map (kbd "C-c x r"))
+              'xref-find-references))
+  (should (eq (lookup-key global-map (kbd "C-c x R"))
+              'my/diagnostics-rename))
+  (should (eq (lookup-key global-map (kbd "C-c x i"))
+              'consult-imenu))
+  (should (eq (lookup-key global-map (kbd "C-c x I"))
+              'consult-imenu-multi)))
+
+(ert-deftest emacs-config/diagnostics-xref-uses-consult ()
+  (should (eq xref-show-xrefs-function 'consult-xref))
+  (should (eq xref-show-definitions-function 'consult-xref))
+  (when (boundp 'xref-search-program)
+    (should (eq xref-search-program 'ripgrep))))
 
 ;;; Project helper behavior
 (ert-deftest emacs-config/project-root-falls-back-to-default-directory ()

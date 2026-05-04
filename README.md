@@ -19,6 +19,9 @@ This repository is meant to live at `~/.emacs.d`.
 - Completion and search support: Vertico, Orderless, Marginalia, Consult,
   Embark, Which-Key, Corfu, and CAPE for fast minibuffer selection, in-buffer
   completion, project search, and discoverable command prefixes
+- Diagnostics and navigation support: consistent Flymake, Xref, Eglot,
+  Consult-Imenu, references, rename, and code-action bindings across language
+  modules
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -53,6 +56,8 @@ libraries:
 - `config-project.el`: project root helpers
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
+- `config-diagnostics.el`: diagnostics, code navigation, references, rename,
+  and language-server action bindings
 - `config-tools.el`: vterm and Magit
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
