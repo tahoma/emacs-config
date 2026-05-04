@@ -25,6 +25,7 @@
   '("lisp/config-package.el"
     "lisp/config-ui.el"
     "lisp/config-editing.el"
+    "lisp/config-platform.el"
     "lisp/config-project.el"
     "lisp/config-completion.el"
     "lisp/config-snippets.el"

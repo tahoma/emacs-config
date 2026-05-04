@@ -32,6 +32,21 @@ have() {
   command -v "$1" >/dev/null 2>&1
 }
 
+running_wsl() {
+  [[ -r /proc/version ]] && grep -Eiq '(Microsoft|WSL)' /proc/version
+}
+
+show_tools() {
+  local tool
+  for tool in "$@"; do
+    if have "$tool"; then
+      printf '  ok      %s -> %s\n' "$tool" "$(command -v "$tool")"
+    else
+      printf '  missing %s\n' "$tool"
+    fi
+  done
+}
+
 section() {
   printf '\n%s\n' "$1"
   printf '%s\n' "----------------------------------------"
@@ -44,18 +59,26 @@ pipx_install_command() {
 
 show_tool_status() {
   section "Detected tool status"
-  local tool
-  for tool in \
+  show_tools \
     emacs git cmake clangd clang-format rg fd jq node npm pandoc python3 \
     pipx direnv ruff uv basedpyright-langserver typescript-language-server \
     vscode-json-language-server yaml-language-server mmdc sqlformat codex
-  do
-    if have "$tool"; then
-      printf '  ok      %s -> %s\n' "$tool" "$(command -v "$tool")"
-    else
-      printf '  missing %s\n' "$tool"
-    fi
-  done
+
+  case "$(uname -s)" in
+    Darwin)
+      show_tools open pbcopy pbpaste
+      ;;
+    Linux)
+      if running_wsl; then
+        show_tools wslview xdg-open explorer.exe clip.exe powershell.exe pwsh.exe
+      else
+        show_tools xdg-open wl-copy wl-paste xclip xsel
+      fi
+      ;;
+    CYGWIN* | MINGW* | MSYS*)
+      show_tools python py explorer.exe clip.exe powershell.exe pwsh.exe winget
+      ;;
+  esac
 }
 
 print_shell_notes() {
@@ -88,6 +111,10 @@ print_shell_notes() {
         say "Debian-style fd is installed as fdfind. The host install path can add an fd shim in ~/.local/bin."
       fi
       ;;
+    CYGWIN* | MINGW* | MSYS*)
+      say "On native Windows, use PowerShell, Git Bash, or MSYS2 with the same PATH Emacs sees."
+      say "After installing command-line tools, restart Emacs so exec-path picks them up."
+      ;;
   esac
 }
 
@@ -111,7 +138,7 @@ setup_macos() {
 setup_debian_like() {
   section "Ubuntu/Debian host setup"
   run_shell "sudo apt-get update"
-  run_shell "sudo apt-get install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck"
+  run_shell "sudo apt-get install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck wl-clipboard xclip xsel xdg-utils"
   run_shell "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
   run_shell "python3 -m pipx ensurepath"
   run_shell "$(pipx_install_command basedpyright)"
@@ -126,12 +153,34 @@ setup_generic_linux() {
   section "Generic Linux host setup"
   say "This script only knows how to install packages automatically on Ubuntu/Debian-like systems."
   say "Install equivalents with your distribution's package manager:"
-  say "  aspell clang-format clangd cmake direnv fd jq lldb node npm pandoc pipx python3 ripgrep shellcheck"
+  say "  aspell clang-format clangd cmake direnv fd jq lldb node npm pandoc pipx python3 ripgrep shellcheck wl-clipboard xclip xsel xdg-utils"
   say "Then install shared language tools:"
   say "  npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
   say "  pipx install basedpyright"
   say "  pipx install ruff"
   say "  pipx install sqlparse"
+}
+
+setup_windows() {
+  section "Windows host setup"
+  say "Run this target from Git Bash or another POSIX-like shell with winget on PATH."
+  say "Scoop or Chocolatey equivalents are also fine if those are how the host is managed."
+  run_shell "winget install --id GNU.Emacs --exact"
+  run_shell "winget install --id Git.Git --exact"
+  run_shell "winget install --id LLVM.LLVM --exact"
+  run_shell "winget install --id Kitware.CMake --exact"
+  run_shell "winget install --id BurntSushi.ripgrep.MSVC --exact"
+  run_shell "winget install --id sharkdp.fd --exact"
+  run_shell "winget install --id jqlang.jq --exact"
+  run_shell "winget install --id OpenJS.NodeJS.LTS --exact"
+  run_shell "winget install --id Python.Python.3.13 --exact"
+  run_shell "winget install --id JohnMacFarlane.Pandoc --exact"
+  run_shell "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
+  run_shell "py -m pip install --user pipx"
+  run_shell "py -m pipx ensurepath"
+  run_shell "py -m pipx install basedpyright || py -m pipx upgrade basedpyright"
+  run_shell "py -m pipx install ruff || py -m pipx upgrade ruff"
+  run_shell "py -m pipx install sqlparse || py -m pipx upgrade sqlparse"
 }
 
 main() {
@@ -153,6 +202,9 @@ main() {
       else
         setup_generic_linux
       fi
+      ;;
+    CYGWIN* | MINGW* | MSYS*)
+      setup_windows
       ;;
     *)
       section "Unsupported host"

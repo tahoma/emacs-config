@@ -28,6 +28,9 @@ This repository is meant to live at `~/.emacs.d`.
 - Editing hygiene: generated backup/auto-save files under `var/`,
   save-place, auto-revert, long-line protection, delete-selection behavior, and
   code-buffer whitespace cleanup
+- Platform integration: guarded macOS, GNU/Linux, WSL, and Windows defaults for
+  modifier keys, Dired, external open/reveal commands, terminal clipboards,
+  browser launchers, trash behavior, and shell selection
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
@@ -67,6 +70,7 @@ libraries:
 - `config-ui.el`: basic interface defaults and Helpful
 - `config-editing.el`: editing state, generated-file locations, auto-revert,
   and code-buffer whitespace hygiene
+- `config-platform.el`: OS-specific host integration guarded by `system-type`
 - `config-project.el`: project root helpers
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
@@ -128,11 +132,12 @@ shell-environment helper commands, opt in explicitly:
 make host HOST_INSTALL=1
 ```
 
-The host helper detects macOS and Ubuntu/Debian-like Linux systems. It covers
-tools such as ripgrep, fd, jq, pandoc, direnv, clangd, clang-format, Node-based
-language servers, Mermaid CLI, pipx-managed Python tools, and shell PATH notes.
-It intentionally does not manage project-local virtualenvs or debug adapters
-that belong inside a particular repository.
+The host helper detects macOS, Ubuntu/Debian-like Linux, WSL, and native
+Windows shells such as Git Bash or MSYS2. It covers tools such as ripgrep, fd,
+jq, pandoc, direnv, clangd, clang-format, Node-based language servers, Mermaid
+CLI, pipx-managed Python tools, platform clipboard/open helpers, and shell PATH
+notes. It intentionally does not manage project-local virtualenvs or debug
+adapters that belong inside a particular repository.
 
 ## Compile
 
@@ -186,6 +191,9 @@ on the machine.
 Some language modules use external command-line tools when they are present and
 fall back gracefully when they are not:
 
+- Platform integration: `open` on macOS, `xdg-open` plus optional
+  `wl-copy`/`wl-paste`, `xclip`, or `xsel` on Linux, and Windows
+  `explorer.exe`/`clip.exe`/PowerShell where available
 - Project search: `rg` from ripgrep, plus `fd` or `find` for file discovery
 - Project environments: `direnv`
 - Agent workflows: `codex` or another Codex CLI launch command on `PATH`
@@ -212,11 +220,31 @@ On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck
+sudo apt install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck wl-clipboard xclip xsel xdg-utils
 sudo npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 pipx install ruff
 pipx install sqlparse
+```
+
+On Windows with winget from Git Bash or another POSIX-like shell:
+
+```sh
+winget install --id GNU.Emacs --exact
+winget install --id Git.Git --exact
+winget install --id LLVM.LLVM --exact
+winget install --id Kitware.CMake --exact
+winget install --id BurntSushi.ripgrep.MSVC --exact
+winget install --id sharkdp.fd --exact
+winget install --id jqlang.jq --exact
+winget install --id OpenJS.NodeJS.LTS --exact
+winget install --id Python.Python.3.13 --exact
+winget install --id JohnMacFarlane.Pandoc --exact
+npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
+py -m pip install --user pipx
+py -m pipx install basedpyright
+py -m pipx install ruff
+py -m pipx install sqlparse
 ```
 
 `vscode-langservers-extracted` provides `vscode-json-language-server`. Mermaid

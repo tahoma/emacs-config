@@ -8,6 +8,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'cl-lib)
 
 (defvar recentf-save-file)
 (defvar savehist-file)
@@ -44,6 +45,8 @@
 (defvar my/editing-backup-directory)
 (defvar my/editing-fill-column)
 (defvar my/editing-var-directory)
+(defvar my/platform-open-bindings-prefix)
+(defvar my/platform-preferred-windows-shells)
 (defvar my/snippets-directory)
 (defvar my/agent-codex-command)
 (defvar my/agent-save-project-buffers-before-launch)
@@ -98,6 +101,19 @@
 (declare-function my/editing-clean-code-whitespace-on-save "config-editing")
 (declare-function my/editing-code-buffer-visuals "config-editing")
 (declare-function my/editing-ensure-runtime-directories "config-editing")
+(declare-function my/platform-apply-defaults "config-platform")
+(declare-function my/platform-clipboard-copy-command "config-platform")
+(declare-function my/platform-clipboard-paste-command "config-platform")
+(declare-function my/platform-copy-file-path "config-platform")
+(declare-function my/platform-default-shell "config-platform")
+(declare-function my/platform-linux-p "config-platform")
+(declare-function my/platform-macos-p "config-platform")
+(declare-function my/platform-open-command "config-platform")
+(declare-function my/platform-open-file-externally "config-platform")
+(declare-function my/platform-reveal-command "config-platform")
+(declare-function my/platform-reveal-in-file-manager "config-platform")
+(declare-function my/platform-windows-p "config-platform")
+(declare-function my/platform-wsl-p "config-platform")
 (declare-function my/agent-codex "config-agent")
 (declare-function my/agent-codex-available-p "config-agent")
 (declare-function my/agent-codex-with-file "config-agent")
@@ -137,6 +153,7 @@
   (dolist (feature '(config-package
                      config-ui
                      config-editing
+                     config-platform
                      config-project
                      config-completion
                      config-snippets
@@ -167,6 +184,7 @@
       (dolist (relative-file '("lisp/config-package.el"
                                "lisp/config-ui.el"
                                "lisp/config-editing.el"
+                               "lisp/config-platform.el"
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
@@ -201,6 +219,7 @@
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
+      (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
@@ -246,8 +265,13 @@
         (should (string-match-p "Dry run" script))
         (should (string-match-p "Darwin" script))
         (should (string-match-p "Ubuntu/Debian" script))
+        (should (string-match-p "Windows host setup" script))
         (should (string-match-p "brew install" script))
         (should (string-match-p "apt-get install" script))
+        (should (string-match-p "winget install" script))
+        (should (string-match-p "wl-clipboard" script))
+        (should (string-match-p "xdg-utils" script))
+        (should (string-match-p "explorer\\.exe" script))
         (should (string-match-p "npm install -g" script))
         (should (string-match-p "pipx ensurepath" script))))))
 
@@ -309,6 +333,89 @@
     (should show-trailing-whitespace)
     (when (fboundp 'display-fill-column-indicator-mode)
       (should (bound-and-true-p display-fill-column-indicator-mode)))))
+
+;;; Platform-specific host integration
+(ert-deftest emacs-config/platform-predicates-identify-system-types ()
+  (should (my/platform-macos-p 'darwin))
+  (should-not (my/platform-macos-p 'gnu/linux))
+  (should (my/platform-linux-p 'gnu/linux))
+  (should-not (my/platform-linux-p 'windows-nt))
+  (should (my/platform-windows-p 'windows-nt))
+  (should (my/platform-windows-p 'cygwin))
+  (should-not (my/platform-windows-p 'darwin))
+  (should (my/platform-wsl-p 'gnu/linux "Linux version Microsoft WSL2"))
+  (should-not (my/platform-wsl-p 'gnu/linux "Linux version generic")))
+
+(ert-deftest emacs-config/platform-shell-default-is-portable ()
+  (let ((process-environment (cons "SHELL=/bin/test-shell"
+                                   process-environment)))
+    (should (equal (my/platform-default-shell 'gnu/linux)
+                   "/bin/test-shell")))
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (command)
+               (and (equal command "pwsh.exe") command))))
+    (should (equal (my/platform-default-shell 'windows-nt)
+                   "pwsh.exe"))))
+
+(ert-deftest emacs-config/platform-open-and-reveal-commands-are-selected ()
+  (should (equal (my/platform-open-command "/tmp/demo.txt" 'darwin)
+                 '("open" "/tmp/demo.txt")))
+  (should (equal (my/platform-reveal-command "/tmp/demo.txt" 'darwin)
+                 (list "open" "-R" (expand-file-name "/tmp/demo.txt"))))
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (command)
+               (and (member command '("xdg-open" "nautilus")) command))))
+    (should (equal (my/platform-open-command "/tmp/demo.txt" 'gnu/linux)
+                   '("xdg-open" "/tmp/demo.txt")))
+    (should (equal (car (my/platform-reveal-command "/tmp/demo.txt" 'gnu/linux))
+                   "nautilus")))
+  (should (equal (cl-subseq
+                  (my/platform-open-command "C:/tmp/demo.txt" 'windows-nt)
+                  0 4)
+                 '("cmd.exe" "/c" "start" "")))
+  (should (equal (car (my/platform-reveal-command
+                       "C:/tmp/demo.txt" 'windows-nt))
+                 "explorer.exe")))
+
+(ert-deftest emacs-config/platform-clipboard-commands-are-selected ()
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (command)
+               (and (member command '("pbcopy" "pbpaste"
+                                      "clip.exe" "powershell.exe"
+                                      "wl-copy" "wl-paste"
+                                      "xclip"))
+                    command))))
+    (should (equal (my/platform-clipboard-copy-command 'darwin)
+                   '("pbcopy")))
+    (should (equal (my/platform-clipboard-paste-command 'darwin)
+                   '("pbpaste")))
+    (should (equal (my/platform-clipboard-copy-command 'windows-nt)
+                   '("clip.exe")))
+    (should (equal (my/platform-clipboard-paste-command 'windows-nt)
+                   '("powershell.exe" "-NoProfile" "-Command" "Get-Clipboard")))
+    (let ((process-environment (cons "WAYLAND_DISPLAY=wayland-0"
+                                     process-environment)))
+      (should (equal (my/platform-clipboard-copy-command 'gnu/linux)
+                     '("wl-copy")))
+      (should (equal (my/platform-clipboard-paste-command 'gnu/linux)
+                     '("wl-paste" "-n")))))
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (command)
+               (and (equal command "xclip") command))))
+    (should (equal (my/platform-clipboard-copy-command 'gnu/linux)
+                   '("xclip" "-selection" "clipboard")))))
+
+(ert-deftest emacs-config/platform-global-bindings-are-present ()
+  (should (equal my/platform-open-bindings-prefix "C-c O"))
+  (should (eq (lookup-key global-map (kbd "C-c O o"))
+              'my/platform-open-file-externally))
+  (should (eq (lookup-key global-map (kbd "C-c O r"))
+              'my/platform-reveal-in-file-manager))
+  (should (eq (lookup-key global-map (kbd "C-c O p"))
+              'my/platform-copy-file-path))
+  (should delete-by-moving-to-trash)
+  (should (stringp shell-file-name))
+  (should (stringp explicit-shell-file-name)))
 
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file
