@@ -1,4 +1,4 @@
-;;; tahoma-project.el --- Project helpers -*- lexical-binding: t; -*-
+;;; config-project.el --- Project helpers -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Built-in project.el is enough for this config. The helper gives terminal and
@@ -15,6 +15,6 @@
         (project-root project)
       default-directory)))
 
-(provide 'tahoma-project)
+(provide 'config-project)
 
-;;; tahoma-project.el ends here
+;;; config-project.el ends here

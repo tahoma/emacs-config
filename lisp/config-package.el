@@ -1,4 +1,4 @@
-;;; tahoma-package.el --- Package management for this Emacs config -*- lexical-binding: t; -*-
+;;; config-package.el --- Package management for this Emacs config -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Keep package setup explicit so a fresh clone behaves like a normal Emacs
@@ -37,6 +37,6 @@
 ;; scripts/setup.el for predictable bootstrapping.
 (setq use-package-always-ensure t)
 
-(provide 'tahoma-package)
+(provide 'config-package)
 
-;;; tahoma-package.el ends here
+;;; config-package.el ends here

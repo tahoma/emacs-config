@@ -1,4 +1,4 @@
-;;; tahoma-markup.el --- Markup and data-file editing support -*- lexical-binding: t; -*-
+;;; config-markup.el --- Markup and data-file editing support -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Project glue tends to live in Markdown, Mermaid, YAML, and JSON files. This
@@ -364,6 +364,6 @@ running it."
 
 (my/markup-enable-yaml-treesit-remaps)
 
-(provide 'tahoma-markup)
+(provide 'config-markup)
 
-;;; tahoma-markup.el ends here
+;;; config-markup.el ends here

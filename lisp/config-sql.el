@@ -1,4 +1,4 @@
-;;; tahoma-sql.el --- SQL editing and interactive query support -*- lexical-binding: t; -*-
+;;; config-sql.el --- SQL editing and interactive query support -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; SQL work tends to happen in two shapes here: standalone query files and
@@ -228,6 +228,6 @@ Connection presets come from `my/sql-connections' or `sql-connection-alist'."
 (define-key my/sql-prefix-map (kbd "e") #'my/sql-copy-region-to-scratch)
 (define-key my/sql-prefix-map (kbd "f") #'my/sql-format-region-or-buffer)
 
-(provide 'tahoma-sql)
+(provide 'config-sql)
 
-;;; tahoma-sql.el ends here
+;;; config-sql.el ends here

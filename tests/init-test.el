@@ -29,28 +29,28 @@
 (defvar my/markup-yaml-language-server-command)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
-(declare-function my/project-root "tahoma-project")
-(declare-function my/tools-import-shell-environment-p "tahoma-tools")
-(declare-function my/c-default-compile-command "tahoma-c")
-(declare-function my/c-format-buffer "tahoma-c")
-(declare-function my/sql-format-region-or-buffer "tahoma-sql")
-(declare-function my/sql-send-region-or-buffer "tahoma-sql")
-(declare-function my/sql-scratch "tahoma-sql")
-(declare-function my/rust-cargo-command-line "tahoma-rust")
-(declare-function my/rust-cargo-root "tahoma-rust")
-(declare-function my/rust-format-buffer "tahoma-rust")
-(declare-function my/js-detect-package-manager "tahoma-js")
-(declare-function my/js-format-region-or-buffer "tahoma-js")
-(declare-function my/js-package-script-command "tahoma-js")
-(declare-function my/js-project-root "tahoma-js")
-(declare-function my/markup-detect-markdown-command "tahoma-markup")
-(declare-function my/markup-ensure-markdown-command "tahoma-markup")
-(declare-function my/markup-json-jq-region-or-buffer "tahoma-markup")
-(declare-function my/markup-markdown-command-available-p "tahoma-markup")
-(declare-function my/markup-markdown-preview "tahoma-markup")
-(declare-function my/markup-mermaid-compile "tahoma-markup")
-(declare-function my/markup-mermaid-compile-command "tahoma-markup")
-(declare-function my/markup-yaml-format-region-or-buffer "tahoma-markup")
+(declare-function my/project-root "config-project")
+(declare-function my/tools-import-shell-environment-p "config-tools")
+(declare-function my/c-default-compile-command "config-c")
+(declare-function my/c-format-buffer "config-c")
+(declare-function my/sql-format-region-or-buffer "config-sql")
+(declare-function my/sql-send-region-or-buffer "config-sql")
+(declare-function my/sql-scratch "config-sql")
+(declare-function my/rust-cargo-command-line "config-rust")
+(declare-function my/rust-cargo-root "config-rust")
+(declare-function my/rust-format-buffer "config-rust")
+(declare-function my/js-detect-package-manager "config-js")
+(declare-function my/js-format-region-or-buffer "config-js")
+(declare-function my/js-package-script-command "config-js")
+(declare-function my/js-project-root "config-js")
+(declare-function my/markup-detect-markdown-command "config-markup")
+(declare-function my/markup-ensure-markdown-command "config-markup")
+(declare-function my/markup-json-jq-region-or-buffer "config-markup")
+(declare-function my/markup-markdown-command-available-p "config-markup")
+(declare-function my/markup-markdown-preview "config-markup")
+(declare-function my/markup-mermaid-compile "config-markup")
+(declare-function my/markup-mermaid-compile-command "config-markup")
+(declare-function my/markup-yaml-format-region-or-buffer "config-markup")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -76,16 +76,16 @@
   (should (featurep 'init)))
 
 (ert-deftest emacs-config/provides-first-party-module-features ()
-  (dolist (feature '(tahoma-package
-                     tahoma-ui
-                     tahoma-project
-                     tahoma-tools
-                     tahoma-elisp
-                     tahoma-c
-                     tahoma-sql
-                     tahoma-rust
-                     tahoma-js
-                     tahoma-markup))
+  (dolist (feature '(config-package
+                     config-ui
+                     config-project
+                     config-tools
+                     config-elisp
+                     config-c
+                     config-sql
+                     config-rust
+                     config-js
+                     config-markup))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -98,16 +98,16 @@
     (should (file-exists-p compile-helper))
     (with-temp-buffer
       (insert-file-contents compile-helper)
-      (dolist (relative-file '("lisp/tahoma-package.el"
-                               "lisp/tahoma-ui.el"
-                               "lisp/tahoma-project.el"
-                               "lisp/tahoma-tools.el"
-                               "lisp/tahoma-elisp.el"
-                               "lisp/tahoma-c.el"
-                               "lisp/tahoma-sql.el"
-                               "lisp/tahoma-rust.el"
-                               "lisp/tahoma-js.el"
-                               "lisp/tahoma-markup.el"
+      (dolist (relative-file '("lisp/config-package.el"
+                               "lisp/config-ui.el"
+                               "lisp/config-project.el"
+                               "lisp/config-tools.el"
+                               "lisp/config-elisp.el"
+                               "lisp/config-c.el"
+                               "lisp/config-sql.el"
+                               "lisp/config-rust.el"
+                               "lisp/config-js.el"
+                               "lisp/config-markup.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -125,12 +125,12 @@
     (let ((makefile (buffer-string)))
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
-      (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-c\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-rust\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-js\\.elc" makefile))
-      (should (string-match-p "lisp/tahoma-markup\\.elc" makefile))
+      (should (string-match-p "lisp/config-package\\.elc" makefile))
+      (should (string-match-p "lisp/config-c\\.elc" makefile))
+      (should (string-match-p "lisp/config-sql\\.elc" makefile))
+      (should (string-match-p "lisp/config-rust\\.elc" makefile))
+      (should (string-match-p "lisp/config-js\\.elc" makefile))
+      (should (string-match-p "lisp/config-markup\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 

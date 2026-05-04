@@ -9,16 +9,16 @@
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-(require 'tahoma-package)
-(require 'tahoma-ui)
-(require 'tahoma-project)
-(require 'tahoma-tools)
-(require 'tahoma-elisp)
-(require 'tahoma-c)
-(require 'tahoma-sql)
-(require 'tahoma-rust)
-(require 'tahoma-js)
-(require 'tahoma-markup)
+(require 'config-package)
+(require 'config-ui)
+(require 'config-project)
+(require 'config-tools)
+(require 'config-elisp)
+(require 'config-c)
+(require 'config-sql)
+(require 'config-rust)
+(require 'config-js)
+(require 'config-markup)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

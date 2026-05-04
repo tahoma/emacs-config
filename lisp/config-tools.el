@@ -1,4 +1,4 @@
-;;; tahoma-tools.el --- Shell, terminal, and version-control tools -*- lexical-binding: t; -*-
+;;; config-tools.el --- Shell, terminal, and version-control tools -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Keep interactive tools outside init.el so the startup file remains a small
@@ -9,7 +9,7 @@
 ;;; Code:
 
 (require 'use-package)
-(require 'tahoma-project)
+(require 'config-project)
 
 (defvar exec-path-from-shell-variables)
 
@@ -61,6 +61,6 @@
 (use-package magit
   :bind ("C-c g" . magit-status))
 
-(provide 'tahoma-tools)
+(provide 'config-tools)
 
-;;; tahoma-tools.el ends here
+;;; config-tools.el ends here

@@ -1,4 +1,4 @@
-;;; tahoma-elisp.el --- Emacs Lisp development environment -*- lexical-binding: t; -*-
+;;; config-elisp.el --- Emacs Lisp development environment -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Make editing this config pleasant: structural editing, inline eval feedback,
@@ -78,6 +78,6 @@
               ("C-c C-m" . macrostep-expand)
               ("C-c C-z" . ielm)))
 
-(provide 'tahoma-elisp)
+(provide 'config-elisp)
 
-;;; tahoma-elisp.el ends here
+;;; config-elisp.el ends here

@@ -1,4 +1,4 @@
-;;; tahoma-js.el --- JavaScript and TypeScript development support -*- lexical-binding: t; -*-
+;;; config-js.el --- JavaScript and TypeScript development support -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; JavaScript projects vary wildly in toolchain shape, so this module keeps the
@@ -13,7 +13,7 @@
 (require 'flymake)
 (require 'js)
 (require 'subr-x)
-(require 'tahoma-project)
+(require 'config-project)
 (require 'treesit nil t)
 (require 'use-package)
 
@@ -363,6 +363,6 @@ Use prettier when available, falling back to indentation otherwise."
 
 (my/js-enable-treesit-remaps)
 
-(provide 'tahoma-js)
+(provide 'config-js)
 
-;;; tahoma-js.el ends here
+;;; config-js.el ends here

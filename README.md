@@ -42,19 +42,19 @@ This repository is meant to live at `~/.emacs.d`.
 first-party modules, and loads `custom.el` last. Stable behavior lives in normal
 libraries:
 
-- `tahoma-package.el`: package archives, priorities, and `use-package`
-- `tahoma-ui.el`: basic interface defaults and Helpful
-- `tahoma-project.el`: project root helpers
-- `tahoma-tools.el`: vterm and Magit
-- `tahoma-elisp.el`: Emacs Lisp development support
-- `tahoma-c.el`: C, C++, CMake, compile, format, and debug support
-- `tahoma-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
+- `config-package.el`: package archives, priorities, and `use-package`
+- `config-ui.el`: basic interface defaults and Helpful
+- `config-project.el`: project root helpers
+- `config-tools.el`: vterm and Magit
+- `config-elisp.el`: Emacs Lisp development support
+- `config-c.el`: C, C++, CMake, compile, format, and debug support
+- `config-sql.el`: SQL editing, formatting, scratch buffers, and SQLi
   connection helpers
-- `tahoma-rust.el`: Rust, Cargo, rustfmt, rust-analyzer, and Cargo.toml
+- `config-rust.el`: Rust, Cargo, rustfmt, rust-analyzer, and Cargo.toml
   support
-- `tahoma-js.el`: JavaScript, TypeScript, TSX, JSON, Prettier, package
+- `config-js.el`: JavaScript, TypeScript, TSX, JSON, Prettier, package
   scripts, and TypeScript language-server support
-- `tahoma-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
+- `config-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
 
 ## Test
 
@@ -155,14 +155,15 @@ manager and rerun the `npm install -g` line.
 
 ## Restore
 
-Clone this repository as `~/.emacs.d`:
+Clone this repository as `~/.emacs.d`, replacing the URL with your own config
+repository:
 
 ```sh
-git clone git@github.com:tahoma/emacs-config.git ~/.emacs.d
+git clone git@github.com:YOUR-USER/emacs-config.git ~/.emacs.d
 ```
 
 If your GitHub CLI is configured for HTTPS, use:
 
 ```sh
-git clone https://github.com/tahoma/emacs-config.git ~/.emacs.d
+git clone https://github.com/YOUR-USER/emacs-config.git ~/.emacs.d
 ```

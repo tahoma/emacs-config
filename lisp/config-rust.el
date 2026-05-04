@@ -1,4 +1,4 @@
-;;; tahoma-rust.el --- Rust development support -*- lexical-binding: t; -*-
+;;; config-rust.el --- Rust development support -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Rust has a strong standard toolchain, so this module keeps Emacs close to
@@ -12,7 +12,7 @@
 (require 'eglot)
 (require 'flymake)
 (require 'subr-x)
-(require 'tahoma-project)
+(require 'config-project)
 (require 'treesit nil t)
 (require 'use-package)
 
@@ -223,6 +223,6 @@ rustfmt integration, and finally to normal indentation."
 
 (my/rust-enable-treesit-remaps)
 
-(provide 'tahoma-rust)
+(provide 'config-rust)
 
-;;; tahoma-rust.el ends here
+;;; config-rust.el ends here

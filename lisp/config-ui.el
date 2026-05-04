@@ -1,4 +1,4 @@
-;;; tahoma-ui.el --- Interface and help defaults -*- lexical-binding: t; -*-
+;;; config-ui.el --- Interface and help defaults -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Stay close to stock Emacs, but remove startup friction and wire better
@@ -34,6 +34,6 @@
          ("C-h x" . helpful-command)
          ("C-c h" . helpful-at-point)))
 
-(provide 'tahoma-ui)
+(provide 'config-ui)
 
-;;; tahoma-ui.el ends here
+;;; config-ui.el ends here

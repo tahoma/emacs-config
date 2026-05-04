@@ -6,16 +6,16 @@ RM_RF ?= rm -rf
 .PHONY: clean compile help realclean setup test
 
 FIRST_PARTY_ELC = init.elc \
-	lisp/tahoma-package.elc \
-	lisp/tahoma-ui.elc \
-	lisp/tahoma-project.elc \
-	lisp/tahoma-tools.elc \
-	lisp/tahoma-elisp.elc \
-	lisp/tahoma-c.elc \
-	lisp/tahoma-sql.elc \
-	lisp/tahoma-rust.elc \
-	lisp/tahoma-js.elc \
-	lisp/tahoma-markup.elc \
+	lisp/config-package.elc \
+	lisp/config-ui.elc \
+	lisp/config-project.elc \
+	lisp/config-tools.elc \
+	lisp/config-elisp.elc \
+	lisp/config-c.elc \
+	lisp/config-sql.elc \
+	lisp/config-rust.elc \
+	lisp/config-js.elc \
+	lisp/config-markup.elc \
 	scripts/compile.elc \
 	scripts/setup.elc \
 	tests/init-test.elc

@@ -1,4 +1,4 @@
-;;; tahoma-c.el --- C and C++ development -*- lexical-binding: t; -*-
+;;; config-c.el --- C and C++ development -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; C and C++ work benefits from a few things being close at hand: clangd for
@@ -15,7 +15,7 @@
 (require 'find-file)
 (require 'gdb-mi)
 (require 'hideshow)
-(require 'tahoma-project)
+(require 'config-project)
 (require 'use-package)
 
 (defgroup my/c nil
@@ -257,6 +257,6 @@ initial value. Without a prefix, run the detected command immediately."
                 ("Kconfig\\'" . conf-mode)))
   (add-to-list 'auto-mode-alist mode))
 
-(provide 'tahoma-c)
+(provide 'config-c)
 
-;;; tahoma-c.el ends here
+;;; config-c.el ends here
