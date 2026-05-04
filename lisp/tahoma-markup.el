@@ -110,13 +110,26 @@
    ((executable-find "markdown") "markdown")
    (t nil)))
 
+(defun my/markup-markdown-command-available-p (&optional command)
+  "Return non-nil when Markdown preview COMMAND can be executed."
+  (let* ((command (or command markdown-command))
+         (program (and (stringp command)
+                       (car (split-string-and-unquote command)))))
+    (and program (executable-find program))))
+
+(defun my/markup-ensure-markdown-command ()
+  "Refresh `markdown-command' from available renderers before previewing."
+  (unless (my/markup-markdown-command-available-p)
+    (when-let ((command (my/markup-detect-markdown-command)))
+      (setq-local markdown-command command))))
+
 (defun my/markup-markdown-preview ()
   "Preview the current Markdown buffer when a renderer is installed."
   (interactive)
-  (let ((command (or markdown-command (my/markup-detect-markdown-command))))
-    (unless command
+  (my/markup-ensure-markdown-command)
+  (let ((command markdown-command))
+    (unless (my/markup-markdown-command-available-p command)
       (user-error "No Markdown renderer found; install pandoc, multimarkdown, or markdown"))
-    (setq-local markdown-command command)
     (call-interactively #'markdown-preview)))
 
 (defun my/markup-markdown-mode-setup ()
@@ -301,6 +314,11 @@ running it."
   (setq markdown-fontify-code-blocks-natively t)
   (when-let ((command (my/markup-detect-markdown-command)))
     (setq markdown-command command))
+  ;; Direct `M-x markdown-preview' should get the same renderer repair as the
+  ;; local `C-c p' wrapper when GUI Emacs starts with a thin PATH.
+  (unless (advice-member-p #'my/markup-ensure-markdown-command
+                           'markdown-preview)
+    (advice-add 'markdown-preview :before #'my/markup-ensure-markdown-command))
   (when (boundp 'markdown-code-lang-modes)
     (add-to-list 'markdown-code-lang-modes '("mermaid" . mermaid-mode))))
 

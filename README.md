@@ -16,6 +16,8 @@ This repository is meant to live at `~/.emacs.d`.
 ## Features
 
 - MELPA, GNU ELPA, and Nongnu ELPA package archives
+- macOS GUI Emacs shell-environment import so Homebrew tools are visible from
+  Emacs.app
 - Magit via `C-c g`
 - vterm via `C-c t`, plus project-root vterm via `C-c T`
 - Emacs Lisp development support: Helpful, Paredit, Rainbow Delimiters,

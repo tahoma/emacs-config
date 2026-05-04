@@ -27,7 +27,10 @@
 (defvar my/markup-json-language-server-command)
 (defvar my/markup-mermaid-output-extension)
 (defvar my/markup-yaml-language-server-command)
+(defvar my/tools-shell-environment-variables)
+(defvar exec-path-from-shell-variables)
 (declare-function my/project-root "tahoma-project")
+(declare-function my/tools-import-shell-environment-p "tahoma-tools")
 (declare-function my/c-default-compile-command "tahoma-c")
 (declare-function my/c-format-buffer "tahoma-c")
 (declare-function my/sql-format-region-or-buffer "tahoma-sql")
@@ -40,7 +43,10 @@
 (declare-function my/js-format-region-or-buffer "tahoma-js")
 (declare-function my/js-package-script-command "tahoma-js")
 (declare-function my/js-project-root "tahoma-js")
+(declare-function my/markup-detect-markdown-command "tahoma-markup")
+(declare-function my/markup-ensure-markdown-command "tahoma-markup")
 (declare-function my/markup-json-jq-region-or-buffer "tahoma-markup")
+(declare-function my/markup-markdown-command-available-p "tahoma-markup")
 (declare-function my/markup-markdown-preview "tahoma-markup")
 (declare-function my/markup-mermaid-compile "tahoma-markup")
 (declare-function my/markup-mermaid-compile-command "tahoma-markup")
@@ -192,6 +198,19 @@
       (delete-directory root t))))
 
 ;;; Integrated tools
+(ert-deftest emacs-config/exec-path-from-shell-is-installed-and-configured ()
+  (should (require 'exec-path-from-shell nil t))
+  (should (equal exec-path-from-shell-variables
+                 my/tools-shell-environment-variables))
+  (dolist (variable '("PATH" "MANPATH" "SHELL"))
+    (should (member variable my/tools-shell-environment-variables))))
+
+(ert-deftest emacs-config/setup-installs-shell-environment-helper ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "exec-path-from-shell" nil t))))
+
 (ert-deftest emacs-config/magit-is-installed-and-bound ()
   (should (require 'magit nil t))
   (should (fboundp 'magit-status))
@@ -582,6 +601,16 @@
                 'my/markup-fill-region-or-paragraph))
     (should (eq (local-key-binding (kbd "C-c p"))
                 'my/markup-markdown-preview))))
+
+(ert-deftest emacs-config/markdown-preview-refreshes-missing-renderer-command ()
+  (with-temp-buffer
+    (markdown-mode)
+    (let ((markdown-command "definitely-not-a-markdown-renderer"))
+      (if (my/markup-detect-markdown-command)
+          (progn
+            (my/markup-ensure-markdown-command)
+            (should (my/markup-markdown-command-available-p markdown-command)))
+        (should-not (my/markup-markdown-command-available-p markdown-command))))))
 
 (ert-deftest emacs-config/json-mode-keeps-prettier-and-adds-json-helpers ()
   (with-temp-buffer

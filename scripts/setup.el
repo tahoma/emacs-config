@@ -20,6 +20,7 @@
 (defconst emacs-config-setup-packages
   '(use-package
     helpful
+    exec-path-from-shell
     vterm
     magit
     paredit
