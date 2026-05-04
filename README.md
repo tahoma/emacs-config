@@ -410,15 +410,17 @@ already running, and it sets the same variables for subprocesses launched from
 inside Emacs. `with-editor` also exports editor variables for `shell`, `eshell`,
 `term`, `vterm`, and one-shot shell commands. `emacsclient -t` keeps Git commits
 and other CLI editor requests inside the current terminal; `-a ""` starts a
-server-backed Emacs if needed. In interactive terminal frames, `xterm-mouse-mode`
-is enabled so scrolling and point/window selection work in terminals that
-support mouse escape sequences. Git commit message buffers get a 72-column body
-fill, Auto Fill, Flyspell when a spelling backend exists, and familiar
-`C-c C-c`/`C-c C-k` finish/cancel bindings. TRAMP defaults prefer SSH, keep
-remote autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use
-modest logging for normal remote editing. Common xterm escape sequences are
-decoded for modified arrows, Home, and End so terminal frames can use familiar
-navigation keys without GUI-only modifiers.
+server-backed Emacs if needed. Finish a plain `emacsclient` edit with `C-x #`;
+in Git commit buffers, `C-c C-c` finishes, `C-c C-k` cancels, and `C-x C-c`
+also finishes the quick editor instead of trying to shut down the whole Emacs
+session. In interactive terminal frames, `xterm-mouse-mode` is enabled so
+scrolling and point/window selection work in terminals that support mouse escape
+sequences. Git commit message buffers get a 72-column body fill, Auto Fill, and
+Flyspell when a spelling backend exists. TRAMP defaults prefer SSH, keep remote
+autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use modest
+logging for normal remote editing. Common xterm escape sequences are decoded for
+modified arrows, Home, and End so terminal frames can use familiar navigation
+keys without GUI-only modifiers.
 
 ## Terminal Environment
 

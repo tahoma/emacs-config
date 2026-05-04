@@ -25,9 +25,12 @@
 (defvar git-commit-mode-map)
 (defvar ispell-program-name)
 (defvar remote-file-name-inhibit-locks)
+(defvar server-buffer-clients)
 (defvar tramp-auto-save-directory)
 (defvar tramp-default-method)
 (defvar tramp-verbose)
+(defvar with-editor-mode)
+(defvar with-editor-mode-map)
 
 (defgroup my/terminal nil
   "Terminal-frame behavior for this Emacs config."
@@ -225,6 +228,24 @@ counterpart to exporting EDITOR in the user's login shell."
                        #'with-editor-shell-command)
     (shell-command-with-editor-mode 1)))
 
+(defun my/terminal-finish-editor-buffer (&optional arg)
+  "Finish the current quick-editor buffer.
+
+Commit messages and other `$EDITOR' buffers can arrive through two paths. Magit
+and Emacs-launched shells use `with-editor', while command-line Git usually
+arrives through a plain `emacsclient' server buffer. Dispatch to the right
+finish command for those cases, and fall back to the normal `C-x C-c' command
+outside quick-editor buffers."
+  (interactive "P")
+  (cond
+   ((and (bound-and-true-p with-editor-mode)
+         (fboundp 'with-editor-finish))
+    (with-editor-finish arg))
+   ((bound-and-true-p server-buffer-clients)
+    (server-edit arg))
+   (t
+    (save-buffers-kill-terminal arg))))
+
 (defun my/terminal-apply-mouse (&optional frame)
   "Enable terminal mouse support for FRAME when appropriate.
 `xterm-mouse-mode' is a global minor mode, but checking the frame keeps the
@@ -287,6 +308,8 @@ they are visible even before a commit buffer has run its hooks."
              with-editor-async-shell-command
              with-editor-export-editor
              with-editor-shell-command)
+  :bind (:map with-editor-mode-map
+         ("C-x C-c" . my/terminal-finish-editor-buffer))
   :config
   (my/terminal-enable-with-editor))
 
@@ -301,7 +324,8 @@ they are visible even before a commit buffer has run its hooks."
   :hook (git-commit-setup . my/terminal-git-commit-setup)
   :bind (:map git-commit-mode-map
          ("C-c C-c" . with-editor-finish)
-         ("C-c C-k" . with-editor-cancel)))
+         ("C-c C-k" . with-editor-cancel)
+         ("C-x C-c" . my/terminal-finish-editor-buffer)))
 
 (my/terminal-apply-osc52-clipboard)
 (my/terminal-apply-editor-environment)
