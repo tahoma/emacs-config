@@ -90,6 +90,59 @@
   (should (eq (lookup-key global-map (kbd "C-c t")) 'vterm))
   (should (eq (lookup-key global-map (kbd "C-c T")) 'my/vterm-project)))
 
+(ert-deftest emacs-config/helpful-is-installed-and-bound ()
+  (should (require 'helpful nil t))
+  (should (fboundp 'helpful-callable))
+  (should (fboundp 'helpful-variable))
+  (should (fboundp 'helpful-key))
+  (should (fboundp 'helpful-command))
+  (should (fboundp 'helpful-at-point))
+  (should (eq (lookup-key global-map (kbd "C-h f")) 'helpful-callable))
+  (should (eq (lookup-key global-map (kbd "C-h v")) 'helpful-variable))
+  (should (eq (lookup-key global-map (kbd "C-h k")) 'helpful-key))
+  (should (eq (lookup-key global-map (kbd "C-h x")) 'helpful-command))
+  (should (eq (lookup-key global-map (kbd "C-c h")) 'helpful-at-point)))
+
+(ert-deftest emacs-config/elisp-helper-packages-are-installed ()
+  (dolist (feature '(paredit
+                     rainbow-delimiters
+                     aggressive-indent
+                     eros
+                     macrostep
+                     package-lint
+                     package-lint-flymake))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/elisp-mode-enables-development-minor-modes ()
+  (with-temp-buffer
+    (insert "(defun emacs-config-test-example ()\n  :ok)\n")
+    (emacs-lisp-mode)
+    (should (not indent-tabs-mode))
+    (should (bound-and-true-p eldoc-mode))
+    (should (bound-and-true-p flymake-mode))
+    (should (bound-and-true-p paredit-mode))
+    (should (bound-and-true-p rainbow-delimiters-mode))
+    (should (bound-and-true-p aggressive-indent-mode))
+    (should (bound-and-true-p eros-mode))))
+
+(ert-deftest emacs-config/elisp-mode-keybindings-are-present ()
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-b")) 'eval-buffer))
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-c")) 'eval-defun))
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-k")) 'check-parens))
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-l"))
+              'package-lint-current-buffer))
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-m"))
+              'macrostep-expand))
+  (should (eq (lookup-key emacs-lisp-mode-map (kbd "C-c C-z")) 'ielm)))
+
+(ert-deftest emacs-config/eldoc-and-flymake-are-tuned-for-elisp ()
+  (should (= eldoc-idle-delay 0.2))
+  (should (not eldoc-echo-area-use-multiline-p))
+  (should (eq (lookup-key flymake-mode-map (kbd "M-n"))
+              'flymake-goto-next-error))
+  (should (eq (lookup-key flymake-mode-map (kbd "M-p"))
+              'flymake-goto-prev-error)))
+
 (when noninteractive
   (ert-run-tests-batch-and-exit))
 

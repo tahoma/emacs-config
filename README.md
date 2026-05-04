@@ -10,6 +10,14 @@ This repository is meant to live at `~/.emacs.d`.
 - `.gitignore`: local Emacs state and generated files to keep out of git
 - `tests/init-test.el`: ERT tests for the config
 
+## Features
+
+- MELPA, GNU ELPA, and Nongnu ELPA package archives
+- Magit via `C-c g`
+- vterm via `C-c t`, plus project-root vterm via `C-c T`
+- Emacs Lisp development support: Helpful, Paredit, Rainbow Delimiters,
+  Aggressive Indent, Eros, Macrostep, Package-Lint, and Flymake integration
+
 ## Test
 
 Run the test suite from the repository root:

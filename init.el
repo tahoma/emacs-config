@@ -43,6 +43,13 @@
 (recentf-mode 1)
 (electric-pair-mode 1)
 
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-h x" . helpful-command)
+         ("C-c h" . helpful-at-point)))
+
 (require 'project)
 
 (defun my/project-root ()
@@ -69,6 +76,62 @@
 
 (use-package magit
   :bind ("C-c g" . magit-status))
+
+(use-package eldoc
+  :ensure nil
+  :custom
+  (eldoc-idle-delay 0.2)
+  (eldoc-echo-area-use-multiline-p nil))
+
+(use-package flymake
+  :ensure nil
+  :demand t
+  :bind (:map flymake-mode-map
+              ("M-n" . flymake-goto-next-error)
+              ("M-p" . flymake-goto-prev-error)))
+
+(use-package paredit
+  :hook ((emacs-lisp-mode lisp-interaction-mode ielm-mode) . paredit-mode))
+
+(use-package rainbow-delimiters
+  :hook ((emacs-lisp-mode lisp-interaction-mode ielm-mode)
+         . rainbow-delimiters-mode))
+
+(use-package aggressive-indent
+  :hook ((emacs-lisp-mode lisp-interaction-mode) . aggressive-indent-mode))
+
+(use-package eros
+  :hook ((emacs-lisp-mode lisp-interaction-mode) . eros-mode))
+
+(use-package macrostep
+  :commands macrostep-expand)
+
+(use-package package-lint
+  :commands (package-lint-current-buffer package-lint-flymake-setup)
+  :hook (emacs-lisp-mode . package-lint-flymake-setup))
+
+(defun my/emacs-lisp-mode-setup ()
+  "Enable the built-in interactive tooling for Emacs Lisp buffers."
+  (setq-local indent-tabs-mode nil)
+  (eldoc-mode 1)
+  (flymake-mode 1))
+
+(use-package elisp-mode
+  :ensure nil
+  :hook ((emacs-lisp-mode lisp-interaction-mode) . my/emacs-lisp-mode-setup)
+  :bind (:map emacs-lisp-mode-map
+              ("C-c C-b" . eval-buffer)
+              ("C-c C-c" . eval-defun)
+              ("C-c C-k" . check-parens)
+              ("C-c C-l" . package-lint-current-buffer)
+              ("C-c C-m" . macrostep-expand)
+              ("C-c C-z" . ielm)
+              :map lisp-interaction-mode-map
+              ("C-c C-b" . eval-buffer)
+              ("C-c C-c" . eval-defun)
+              ("C-c C-k" . check-parens)
+              ("C-c C-m" . macrostep-expand)
+              ("C-c C-z" . ielm)))
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
