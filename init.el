@@ -11,6 +11,7 @@
 
 (require 'config-package)
 (require 'config-ui)
+(require 'config-editing)
 (require 'config-project)
 (require 'config-completion)
 (require 'config-diagnostics)

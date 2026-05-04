@@ -40,6 +40,10 @@
 (defvar my/completion-preview-delay)
 (defvar my/environment-auto-enable-direnv)
 (defvar my/environment-direnv-executable)
+(defvar my/editing-auto-save-directory)
+(defvar my/editing-backup-directory)
+(defvar my/editing-fill-column)
+(defvar my/editing-var-directory)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -86,6 +90,9 @@
 (declare-function my/diagnostics-rename "config-diagnostics")
 (declare-function my/environment-direnv-available-p "config-environment")
 (declare-function my/environment-enable-envrc "config-environment")
+(declare-function my/editing-clean-code-whitespace-on-save "config-editing")
+(declare-function my/editing-code-buffer-visuals "config-editing")
+(declare-function my/editing-ensure-runtime-directories "config-editing")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -113,6 +120,7 @@
 (ert-deftest emacs-config/provides-first-party-module-features ()
   (dolist (feature '(config-package
                      config-ui
+                     config-editing
                      config-project
                      config-completion
                      config-diagnostics
@@ -139,6 +147,7 @@
       (insert-file-contents compile-helper)
       (dolist (relative-file '("lisp/config-package.el"
                                "lisp/config-ui.el"
+                               "lisp/config-editing.el"
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
                                "lisp/config-diagnostics.el"
@@ -169,6 +178,7 @@
       (should (string-match-p "^clean:" makefile))
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/config-package\\.elc" makefile))
+      (should (string-match-p "lisp/config-editing\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
@@ -218,6 +228,38 @@
   (should (bound-and-true-p savehist-mode))
   (should (bound-and-true-p recentf-mode))
   (should (bound-and-true-p electric-pair-mode)))
+
+(ert-deftest emacs-config/editing-state-defaults-are-enabled ()
+  (should (bound-and-true-p save-place-mode))
+  (should (bound-and-true-p global-auto-revert-mode))
+  (should (bound-and-true-p global-so-long-mode))
+  (should (bound-and-true-p delete-selection-mode))
+  (should (bound-and-true-p column-number-mode))
+  (should (bound-and-true-p show-paren-mode))
+  (should require-final-newline)
+  (should-not sentence-end-double-space)
+  (should kill-do-not-save-duplicates)
+  (should-not auto-revert-verbose)
+  (should (= (default-value 'fill-column) my/editing-fill-column)))
+
+(ert-deftest emacs-config/editing-runtime-files-live-under-var ()
+  (should (file-directory-p my/editing-var-directory))
+  (should (file-directory-p my/editing-backup-directory))
+  (should (file-directory-p my/editing-auto-save-directory))
+  (should (string-prefix-p (expand-file-name "var/" emacs-config-test-root)
+                           my/editing-var-directory))
+  (should (equal (cdr (assoc "." backup-directory-alist))
+                 my/editing-backup-directory))
+  (should (string-prefix-p my/editing-auto-save-directory
+                           auto-save-list-file-prefix)))
+
+(ert-deftest emacs-config/editing-code-buffers-clean-whitespace ()
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (should (memq #'delete-trailing-whitespace before-save-hook))
+    (should show-trailing-whitespace)
+    (when (fboundp 'display-fill-column-indicator-mode)
+      (should (bound-and-true-p display-fill-column-indicator-mode)))))
 
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file

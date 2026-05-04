@@ -24,6 +24,9 @@ This repository is meant to live at `~/.emacs.d`.
   modules
 - Project environment support: envrc/direnv integration so repository-local
   `.envrc` files can provide toolchain paths and environment variables to Emacs
+- Editing hygiene: generated backup/auto-save files under `var/`,
+  save-place, auto-revert, long-line protection, delete-selection behavior, and
+  code-buffer whitespace cleanup
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -55,6 +58,8 @@ libraries:
 
 - `config-package.el`: package archives, priorities, and `use-package`
 - `config-ui.el`: basic interface defaults and Helpful
+- `config-editing.el`: editing state, generated-file locations, auto-revert,
+  and code-buffer whitespace hygiene
 - `config-project.el`: project root helpers
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus

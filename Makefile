@@ -8,6 +8,7 @@ RM_RF ?= rm -rf
 FIRST_PARTY_ELC = init.elc \
 	lisp/config-package.elc \
 	lisp/config-ui.elc \
+	lisp/config-editing.elc \
 	lisp/config-project.elc \
 	lisp/config-completion.elc \
 	lisp/config-diagnostics.elc \
