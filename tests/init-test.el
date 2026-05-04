@@ -45,6 +45,9 @@
 (defvar my/editing-backup-directory)
 (defvar my/editing-fill-column)
 (defvar my/editing-var-directory)
+(defvar my/workspace-enable-tab-bar)
+(defvar my/workspace-tab-bar-show)
+(defvar my/workspace-windmove-wrap-around)
 (defvar my/platform-open-bindings-prefix)
 (defvar my/platform-preferred-windows-shells)
 (defvar my/terminal-osc52-copy-enabled)
@@ -126,6 +129,9 @@
 (declare-function my/editing-clean-code-whitespace-on-save "config-editing")
 (declare-function my/editing-code-buffer-visuals "config-editing")
 (declare-function my/editing-ensure-runtime-directories "config-editing")
+(declare-function my/workspace-project-name "config-workspace")
+(declare-function my/workspace-tab-new-for-project "config-workspace")
+(declare-function my/workspace-tab-rename-for-project "config-workspace")
 (declare-function my/platform-apply-defaults "config-platform")
 (declare-function my/platform-clipboard-copy-command "config-platform")
 (declare-function my/platform-clipboard-paste-command "config-platform")
@@ -209,6 +215,7 @@
                      config-platform
                      config-terminal
                      config-project
+                     config-workspace
                      config-completion
                      config-snippets
                      config-diagnostics
@@ -241,6 +248,7 @@
                                "lisp/config-platform.el"
                                "lisp/config-terminal.el"
                                "lisp/config-project.el"
+                               "lisp/config-workspace.el"
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
                                "lisp/config-diagnostics.el"
@@ -310,6 +318,7 @@
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
       (should (string-match-p "lisp/config-platform\\.elc" makefile))
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
+      (should (string-match-p "lisp/config-workspace\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
@@ -1078,6 +1087,31 @@
             (should (equal (file-truename (my/project-root))
                            (file-truename root)))))
       (delete-directory root t))))
+
+;;; Workspace and window ergonomics
+(ert-deftest emacs-config/workspace-window-and-tab-defaults-are-enabled ()
+  (should (bound-and-true-p winner-mode))
+  (should my/workspace-enable-tab-bar)
+  (should (= my/workspace-tab-bar-show 1))
+  (should (eq windmove-wrap-around my/workspace-windmove-wrap-around))
+  (should (bound-and-true-p tab-bar-mode))
+  (should tab-bar-tab-hints)
+  (should-not tab-bar-close-button-show))
+
+(ert-deftest emacs-config/workspace-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c w u")) 'winner-undo))
+  (should (eq (lookup-key global-map (kbd "C-c w r")) 'winner-redo))
+  (should (eq (lookup-key global-map (kbd "C-c w h")) 'windmove-left))
+  (should (eq (lookup-key global-map (kbd "C-c w j")) 'windmove-down))
+  (should (eq (lookup-key global-map (kbd "C-c w k")) 'windmove-up))
+  (should (eq (lookup-key global-map (kbd "C-c w l")) 'windmove-right))
+  (should (eq (lookup-key global-map (kbd "C-c w n"))
+              'my/workspace-tab-new-for-project))
+  (should (eq (lookup-key global-map (kbd "C-c w m"))
+              'my/workspace-tab-rename-for-project))
+  (should (eq (lookup-key global-map (kbd "C-c w o")) 'tab-next))
+  (should (eq (lookup-key global-map (kbd "C-c w p")) 'tab-previous))
+  (should (eq (lookup-key global-map (kbd "C-c w c")) 'tab-close)))
 
 ;;; Integrated tools
 (ert-deftest emacs-config/exec-path-from-shell-is-installed-and-configured ()

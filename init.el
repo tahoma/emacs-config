@@ -15,6 +15,7 @@
 (require 'config-platform)
 (require 'config-terminal)
 (require 'config-project)
+(require 'config-workspace)
 (require 'config-completion)
 (require 'config-snippets)
 (require 'config-diagnostics)

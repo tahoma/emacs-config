@@ -40,6 +40,8 @@ This repository is meant to live at `~/.emacs.d`.
   SSH sessions where local OS clipboard tools would run on the wrong host,
   plus an `emacsclient -t` editor environment for CLI tools and `with-editor`
   support for shells launched from Emacs, and xterm-compatible mouse support
+- Workspace ergonomics: Winner history, directional window movement, and
+  project-named tab-bar workspaces without a separate workspace framework
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
@@ -84,6 +86,8 @@ libraries:
 - `config-terminal.el`: terminal-frame behavior for SSH, `emacsclient -t`, and
   CLI editor sessions
 - `config-project.el`: project root helpers
+- `config-workspace.el`: window history, directional movement, and tab-bar
+  project workspaces
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
 - `config-snippets.el`: Yasnippet setup and repo-owned snippet directory
