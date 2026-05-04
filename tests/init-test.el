@@ -559,6 +559,8 @@
         (should (string-match-p "Ubuntu/Debian" script))
         (should (string-match-p "Windows host setup" script))
         (should (string-match-p "brew install" script))
+        (should (string-match-p "chipsalliance/verible" script))
+        (should (string-match-p "optional setup failed" script))
         (should (string-match-p "apt-get install" script))
         (should (string-match-p "winget install" script))
         (should (string-match-p "wl-clipboard" script))

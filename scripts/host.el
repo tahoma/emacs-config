@@ -142,6 +142,20 @@ one. Commands still work non-interactively when sudo credentials are cached."
             (error "Command failed with status %s: %s" status command))))
     (host--say "  %s" command)))
 
+(defun host--run-optional-shell (command description)
+  "Print or execute optional shell COMMAND for DESCRIPTION.
+
+Optional host tools should not prevent the rest of HOST_INSTALL=1 from
+finishing. That is especially useful for tools distributed outside an operating
+system's default package set."
+  (if host--install
+      (progn
+        (host--say "+ %s" command)
+        (let ((status (host--run-shell-command command)))
+          (unless (zerop status)
+            (host--status "warn" "optional setup failed for %s" description))))
+    (host--say "  %s" command)))
+
 (defun host--process-output (program &rest args)
   "Return trimmed output from PROGRAM ARGS, or nil on failure."
   (when program
@@ -179,7 +193,14 @@ one. Commands still work non-interactively when sudo credentials are cached."
     (when host--install
       (error "Homebrew is required for HOST_INSTALL=1 on macOS")))
   (host--run-shell
-   "brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verible verilator")
+   "brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verilator")
+  ;; Verible is maintained in the CHIPS Alliance tap rather than Homebrew core,
+  ;; so keep it separate from the main package batch. If that optional tap is
+  ;; temporarily unavailable, the rest of the host setup should still complete.
+  (host--say "Verible is installed from the CHIPS Alliance Homebrew tap.")
+  (host--run-optional-shell
+   "brew tap chipsalliance/verible && brew install verible"
+   "Verible SystemVerilog tools")
   (host--run-shell
    "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server")
   (host--run-shell "pipx ensurepath")
@@ -278,6 +299,10 @@ one. Commands still work non-interactively when sudo credentials are cached."
   (host--say "  make test")
   (host--say "Project-local tools such as pytest, black, debugpy, and codelldb are still best installed per project."))
 
-(host--main)
+(condition-case err
+    (host--main)
+  (error
+   (host--say "Host setup failed: %s" (error-message-string err))
+   (kill-emacs 1)))
 
 ;;; host.el ends here

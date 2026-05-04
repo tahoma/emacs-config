@@ -472,11 +472,16 @@ fall back gracefully when they are not:
 On macOS with Homebrew:
 
 ```sh
-brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verible verilator
+brew install aspell cmake direnv fd icarus-verilog jq llvm node pandoc pipx python ripgrep ruff shellcheck uv verilator
+brew tap chipsalliance/verible
+brew install verible
 npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
 pipx install sqlparse
 ```
+
+Verible is not a core Homebrew formula; its macOS formula is maintained in the
+CHIPS Alliance tap.
 
 On Ubuntu/Debian:
 
