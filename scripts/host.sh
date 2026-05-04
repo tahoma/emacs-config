@@ -62,7 +62,8 @@ show_tool_status() {
   show_tools \
     emacs git cmake clangd clang-format rg fd jq node npm pandoc python3 \
     pipx direnv ruff uv basedpyright-langserver typescript-language-server \
-    vscode-json-language-server yaml-language-server mmdc sqlformat codex
+    vscode-json-language-server yaml-language-server mmdc sqlformat codex \
+    claude cursor-agent
 
   case "$(uname -s)" in
     Darwin)

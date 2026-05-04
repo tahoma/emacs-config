@@ -281,6 +281,7 @@
         (should (string-match-p "tests/init-test\\.el" instructions))
         (should (string-match-p "make compile" instructions))
         (should (string-match-p "make test" instructions))
+        (should (string-match-p "C-c a \\?" instructions))
         (should (string-match-p "Do not edit files under `elpa/" instructions))))
     (with-temp-buffer
       (insert-file-contents claude-file)
@@ -371,6 +372,9 @@
         (should (string-match-p "wl-clipboard" script))
         (should (string-match-p "xdg-utils" script))
         (should (string-match-p "explorer\\.exe" script))
+        (should (string-match-p "codex" script))
+        (should (string-match-p "claude" script))
+        (should (string-match-p "cursor-agent" script))
         (should (string-match-p "make user" script))
         (should (string-match-p "npm install -g" script))
         (should (string-match-p "pipx ensurepath" script))))))

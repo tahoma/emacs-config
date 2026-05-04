@@ -179,9 +179,10 @@ make host HOST_INSTALL=1
 The host helper detects macOS, Ubuntu/Debian-like Linux, WSL, and native
 Windows shells such as Git Bash or MSYS2. It covers tools such as ripgrep, fd,
 jq, pandoc, direnv, clangd, clang-format, Node-based language servers, Mermaid
-CLI, pipx-managed Python tools, and platform clipboard/open helpers. It
-intentionally does not manage project-local virtualenvs, debug adapters, or
-per-user shell profile settings.
+CLI, pipx-managed Python tools, platform clipboard/open helpers, and agent CLI
+availability for Codex, Claude Code, and Cursor Agent. It intentionally does not
+manage project-local virtualenvs, debug adapters, commercial agent
+authentication, or per-user shell profile settings.
 
 ## User Setup
 
