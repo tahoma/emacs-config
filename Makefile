@@ -18,6 +18,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-project.elc \
 	lisp/config-workspace.elc \
 	lisp/config-files.elc \
+	lisp/config-buffers.elc \
 	lisp/config-completion.elc \
 	lisp/config-snippets.elc \
 	lisp/config-diagnostics.elc \

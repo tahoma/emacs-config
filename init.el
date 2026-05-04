@@ -17,6 +17,7 @@
 (require 'config-project)
 (require 'config-workspace)
 (require 'config-files)
+(require 'config-buffers)
 (require 'config-completion)
 (require 'config-snippets)
 (require 'config-diagnostics)

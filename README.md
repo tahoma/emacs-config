@@ -44,6 +44,8 @@ This repository is meant to live at `~/.emacs.d`.
   project-named tab-bar workspaces without a separate workspace framework
 - Dired file management: project-root Dired entry points, Wdired bulk rename,
   hidden generated files, DWIM copy targets, and recursive copy/delete defaults
+- Buffer management: Ibuffer replaces the flat buffer list with grouped
+  development, Dired, Magit, terminal, help, and Emacs internal buffers
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
@@ -92,6 +94,7 @@ libraries:
   project workspaces
 - `config-files.el`: Dired, Dired-X, Wdired, and project file-management
   defaults
+- `config-buffers.el`: Ibuffer grouping and buffer-list defaults
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
 - `config-snippets.el`: Yasnippet setup and repo-owned snippet directory

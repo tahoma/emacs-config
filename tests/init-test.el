@@ -55,6 +55,11 @@
 (defvar dired-omit-files)
 (defvar dired-recursive-copies)
 (defvar dired-recursive-deletes)
+(defvar ibuffer-expert)
+(defvar ibuffer-filter-groups)
+(defvar ibuffer-show-empty-filter-groups)
+(defvar ibuffer-use-other-window)
+(defvar my/buffers-ibuffer-filter-groups)
 (defvar my/platform-open-bindings-prefix)
 (defvar my/platform-preferred-windows-shells)
 (defvar my/terminal-osc52-copy-enabled)
@@ -142,6 +147,8 @@
 (declare-function my/files-dired-project-root "config-files")
 (declare-function my/files-dired-toggle-omit "config-files")
 (declare-function my/files-dired-setup "config-files")
+(declare-function my/buffers-ibuffer "config-buffers")
+(declare-function my/buffers-ibuffer-setup "config-buffers")
 (declare-function my/platform-apply-defaults "config-platform")
 (declare-function my/platform-clipboard-copy-command "config-platform")
 (declare-function my/platform-clipboard-paste-command "config-platform")
@@ -227,6 +234,7 @@
                      config-project
                      config-workspace
                      config-files
+                     config-buffers
                      config-completion
                      config-snippets
                      config-diagnostics
@@ -261,6 +269,7 @@
                                "lisp/config-project.el"
                                "lisp/config-workspace.el"
                                "lisp/config-files.el"
+                               "lisp/config-buffers.el"
                                "lisp/config-completion.el"
                                "lisp/config-snippets.el"
                                "lisp/config-diagnostics.el"
@@ -332,6 +341,7 @@
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-workspace\\.elc" makefile))
       (should (string-match-p "lisp/config-files\\.elc" makefile))
+      (should (string-match-p "lisp/config-buffers\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
       (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
@@ -1149,6 +1159,19 @@
   (should (eq (lookup-key dired-mode-map (kbd "^")) 'dired-up-directory))
   (should (eq (lookup-key dired-mode-map (kbd "RET"))
               'dired-find-alternate-file)))
+
+;;; Buffer management
+(ert-deftest emacs-config/buffers-ibuffer-defaults-are-enabled ()
+  (should ibuffer-expert)
+  (should-not ibuffer-show-empty-filter-groups)
+  (should-not ibuffer-use-other-window)
+  (dolist (group '("Development" "Dired" "Magit" "Terminals" "Help" "Emacs"))
+    (should (assoc group my/buffers-ibuffer-filter-groups))))
+
+(ert-deftest emacs-config/buffers-ibuffer-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-x C-b")) 'my/buffers-ibuffer))
+  (should (eq (lookup-key global-map (kbd "C-c b b")) 'my/buffers-ibuffer))
+  (should (eq (lookup-key global-map (kbd "C-c b r")) 'ibuffer-update)))
 
 ;;; Integrated tools
 (ert-deftest emacs-config/exec-path-from-shell-is-installed-and-configured ()
