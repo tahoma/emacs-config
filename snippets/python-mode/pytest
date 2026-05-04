@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pytest test
+# key: pytest
+# --
+def test_${1:behavior}():
+    ${0:assert True}

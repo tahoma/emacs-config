@@ -27,6 +27,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Editing hygiene: generated backup/auto-save files under `var/`,
   save-place, auto-revert, long-line protection, delete-selection behavior, and
   code-buffer whitespace cleanup
+- Snippet support: Yasnippet with small repo-owned templates for common test and
+  source skeletons
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -63,8 +65,10 @@ libraries:
 - `config-project.el`: project root helpers
 - `config-completion.el`: minibuffer completion, in-buffer completion, project
   search, command discovery, and action menus
+- `config-snippets.el`: Yasnippet setup and repo-owned snippet directory
 - `config-diagnostics.el`: diagnostics, code navigation, references, rename,
   and language-server action bindings
+- `snippets/`: first-party snippets loaded by `config-snippets.el`
 - `config-environment.el`: direnv/envrc project environment loading
 - `config-tools.el`: vterm and Magit
 - `config-elisp.el`: Emacs Lisp development support

@@ -14,6 +14,7 @@
 (require 'config-editing)
 (require 'config-project)
 (require 'config-completion)
+(require 'config-snippets)
 (require 'config-diagnostics)
 (require 'config-environment)
 (require 'config-tools)

@@ -44,6 +44,7 @@
 (defvar my/editing-backup-directory)
 (defvar my/editing-fill-column)
 (defvar my/editing-var-directory)
+(defvar my/snippets-directory)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
 (declare-function my/project-root "config-project")
@@ -123,6 +124,7 @@
                      config-editing
                      config-project
                      config-completion
+                     config-snippets
                      config-diagnostics
                      config-environment
                      config-tools
@@ -150,6 +152,7 @@
                                "lisp/config-editing.el"
                                "lisp/config-project.el"
                                "lisp/config-completion.el"
+                               "lisp/config-snippets.el"
                                "lisp/config-diagnostics.el"
                                "lisp/config-environment.el"
                                "lisp/config-tools.el"
@@ -180,6 +183,7 @@
       (should (string-match-p "lisp/config-package\\.elc" makefile))
       (should (string-match-p "lisp/config-editing\\.elc" makefile))
       (should (string-match-p "lisp/config-completion\\.elc" makefile))
+      (should (string-match-p "lisp/config-snippets\\.elc" makefile))
       (should (string-match-p "lisp/config-diagnostics\\.elc" makefile))
       (should (string-match-p "lisp/config-environment\\.elc" makefile))
       (should (string-match-p "lisp/config-c\\.elc" makefile))
@@ -333,6 +337,36 @@
   (should (eq (lookup-key global-map (kbd "C-h B"))
               'embark-bindings))
   (should (eq prefix-help-command 'embark-prefix-help-command)))
+
+;;; Snippets and templates
+(ert-deftest emacs-config/snippets-helper-package-is-installed ()
+  (should (require 'yasnippet nil t)))
+
+(ert-deftest emacs-config/setup-installs-snippet-helper-package ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "yasnippet" nil t))))
+
+(ert-deftest emacs-config/snippets-are-loaded-from-repo ()
+  (should (bound-and-true-p yas-global-mode))
+  (should (equal my/snippets-directory
+                 (expand-file-name "snippets/" emacs-config-test-root)))
+  (should (member my/snippets-directory yas-snippet-dirs))
+  (dolist (relative-file '("snippets/emacs-lisp-mode/ert"
+                           "snippets/python-mode/pytest"
+                           "snippets/c-mode/main"
+                           "snippets/rust-mode/test"
+                           "snippets/typescript-mode/test"))
+    (should (file-exists-p
+             (expand-file-name relative-file emacs-config-test-root)))))
+
+(ert-deftest emacs-config/snippet-bindings-are-present ()
+  (should (eq (lookup-key global-map (kbd "C-c y i")) 'yas-insert-snippet))
+  (should (eq (lookup-key global-map (kbd "C-c y n")) 'yas-new-snippet))
+  (should (eq (lookup-key global-map (kbd "C-c y r")) 'yas-reload-all))
+  (should (eq (lookup-key global-map (kbd "C-c y v"))
+              'yas-visit-snippet-file)))
 
 ;;; Diagnostics and code navigation
 (ert-deftest emacs-config/diagnostics-built-in-tools-are-available ()

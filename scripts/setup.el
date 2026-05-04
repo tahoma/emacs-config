@@ -29,6 +29,7 @@
     which-key
     corfu
     cape
+    yasnippet
     envrc
     exec-path-from-shell
     vterm

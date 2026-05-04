@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Rust test
+# key: test
+# --
+#[test]
+fn ${1:it_works}() {
+    ${0:assert!(true);}
+}

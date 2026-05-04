@@ -27,6 +27,7 @@
     "lisp/config-editing.el"
     "lisp/config-project.el"
     "lisp/config-completion.el"
+    "lisp/config-snippets.el"
     "lisp/config-diagnostics.el"
     "lisp/config-environment.el"
     "lisp/config-tools.el"

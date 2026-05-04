@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: TypeScript test
+# key: test
+# --
+test("${1:behavior}", () => {
+  ${0:expect(true).toBe(true);}
+});
