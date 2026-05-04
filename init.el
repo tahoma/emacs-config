@@ -6,6 +6,28 @@
 
 ;;; Code:
 
+(require 'package)
+
+(setq package-archives
+      '(("gnu" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa" . "https://melpa.org/packages/")))
+
+(setq package-archive-priorities
+      '(("gnu" . 20)
+        ("nongnu" . 10)
+        ("melpa" . 0)))
+
+(package-initialize)
+
+(unless (require 'use-package nil t)
+  (unless package-archive-contents
+    (package-refresh-contents))
+  (package-install 'use-package)
+  (require 'use-package))
+
+(setq use-package-always-ensure t)
+
 (setq inhibit-startup-screen t)
 (setq ring-bell-function 'ignore)
 
