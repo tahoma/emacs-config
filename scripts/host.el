@@ -132,14 +132,25 @@ one. Commands still work non-interactively when sudo credentials are cached."
           (princ output))
         status))))
 
+(defun host--successful-status-p (status)
+  "Return non-nil when process STATUS represents success."
+  (and (integerp status) (zerop status)))
+
+(defun host--status-description (status)
+  "Return a human-readable description for process STATUS."
+  (if (integerp status)
+      (number-to-string status)
+    (format "%s" status)))
+
 (defun host--run-shell (command)
   "Print or execute shell COMMAND according to HOST_INSTALL."
   (if host--install
       (progn
         (host--say "+ %s" command)
         (let ((status (host--run-shell-command command)))
-          (unless (zerop status)
-            (error "Command failed with status %s: %s" status command))))
+          (unless (host--successful-status-p status)
+            (error "Command failed with status %s: %s"
+                   (host--status-description status) command))))
     (host--say "  %s" command)))
 
 (defun host--run-optional-shell (command description)
@@ -152,15 +163,17 @@ system's default package set."
       (progn
         (host--say "+ %s" command)
         (let ((status (host--run-shell-command command)))
-          (unless (zerop status)
-            (host--status "warn" "optional setup failed for %s" description))))
+          (unless (host--successful-status-p status)
+            (host--status "warn" "optional setup failed for %s (status %s)"
+                          description (host--status-description status)))))
     (host--say "  %s" command)))
 
 (defun host--process-output (program &rest args)
   "Return trimmed output from PROGRAM ARGS, or nil on failure."
   (when program
     (with-temp-buffer
-      (when (zerop (apply #'call-process program nil t nil args))
+      (when (host--successful-status-p
+             (apply #'call-process program nil t nil args))
         (string-trim (buffer-string))))))
 
 (defun host--pipx-install-command (package)
@@ -201,8 +214,9 @@ system's default package set."
   (host--run-optional-shell
    "brew tap chipsalliance/verible && brew install verible"
    "Verible SystemVerilog tools")
-  (host--run-shell
-   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server")
+  (host--run-optional-shell
+   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
+   "Node-based language servers and Mermaid CLI")
   (host--run-shell "pipx ensurepath")
   (host--run-shell (host--pipx-install-command "basedpyright"))
   (host--run-shell (host--pipx-install-command "sqlparse")))
@@ -213,8 +227,9 @@ system's default package set."
   (host--run-shell "sudo apt-get update")
   (host--run-shell
    "sudo apt-get install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git iverilog jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck verilator wl-clipboard xclip xsel xdg-utils")
-  (host--run-shell
-   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server")
+  (host--run-optional-shell
+   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
+   "Node-based language servers and Mermaid CLI")
   (host--run-shell "python3 -m pipx ensurepath")
   (host--run-shell (host--pipx-install-command "basedpyright"))
   (host--run-shell (host--pipx-install-command "ruff"))
@@ -257,8 +272,9 @@ system's default package set."
   (host--run-shell "winget install --id OpenJS.NodeJS.LTS --exact")
   (host--run-shell "winget install --id Python.Python.3.13 --exact")
   (host--run-shell "winget install --id JohnMacFarlane.Pandoc --exact")
-  (host--run-shell
-   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server")
+  (host--run-optional-shell
+   "npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server"
+   "Node-based language servers and Mermaid CLI")
   (host--run-shell "py -m pip install --user pipx")
   (host--run-shell "py -m pipx ensurepath")
   (host--run-shell "py -m pipx install basedpyright || py -m pipx upgrade basedpyright")

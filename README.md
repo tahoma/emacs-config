@@ -518,10 +518,11 @@ py -m pipx install ruff
 py -m pipx install sqlparse
 ```
 
-`vscode-langservers-extracted` provides `vscode-json-language-server`. Mermaid
-CLI can be picky about Node versions on older Linux distributions; if the distro
-Node is too old, install a current LTS Node through your preferred Node version
-manager and rerun the `npm install -g` line.
+`vscode-langservers-extracted` provides `vscode-json-language-server`. The host
+helper treats the global npm package batch as optional: if Node/npm is broken or
+the available Node version is a poor fit, the rest of `make host
+HOST_INSTALL=1` can continue. Repair Node or install a current LTS Node through
+your preferred Node version manager, then rerun the `npm install -g` line.
 
 Python project tools such as `pytest`, `ruff`, and `black` are usually best kept
 inside each project's virtualenv. The config will find them in `.venv/bin`

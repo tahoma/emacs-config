@@ -555,6 +555,8 @@
         (should (string-match-p "Dry run" script))
         (should (string-match-p "stock Emacs" script))
         (should (string-match-p "init\\.el" script))
+        (should (string-match-p "host--successful-status-p" script))
+        (should (string-match-p "host--status-description" script))
         (should (string-match-p "Darwin" script))
         (should (string-match-p "Ubuntu/Debian" script))
         (should (string-match-p "Windows host setup" script))
@@ -574,6 +576,7 @@
         (should (string-match-p "cursor-agent" script))
         (should (string-match-p "make user" script))
         (should (string-match-p "npm install -g" script))
+        (should (string-match-p "Node-based language servers" script))
         (should (string-match-p "pipx ensurepath" script))))))
 
 (ert-deftest emacs-config/user-helper-is-safe-and-idempotent ()
