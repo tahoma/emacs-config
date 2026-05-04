@@ -19,3 +19,6 @@ var/
 *~
 \#*\#
 .\#*
+CLAUDE.local.md
+.claude/settings.local.json
+.cursor/rules/*.local.mdc

@@ -1,0 +1,10 @@
+---
+description: Shared project instructions for this Emacs configuration.
+globs:
+alwaysApply: true
+---
+
+@AGENTS.md
+
+Use `AGENTS.md` as the canonical project brief. Keep Cursor-specific additions
+here small and only add them when they affect Cursor behavior specifically.

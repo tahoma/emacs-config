@@ -14,6 +14,10 @@ This repository is meant to live at `~/.emacs.d`.
 - `scripts/host.sh`: host-level external tool helper
 - `scripts/user.sh`: user shell, editor, PATH, and terminal profile helper
 - `tests/init-test.el`: ERT tests for the config
+- `AGENTS.md`: shared project instructions for coding agents
+- `CLAUDE.md`: Claude Code adapter that imports the shared agent instructions
+- `.cursor/rules/emacs-config.mdc`: Cursor project rule for the same shared
+  context
 
 ## Features
 
@@ -100,6 +104,23 @@ libraries:
 - `config-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
 - `config-python.el`: Python, virtualenvs, pytest, ruff/black, Eglot, and
   requirements files
+
+## Agent Context
+
+Project-level agent instructions live in `AGENTS.md`. Keep that file concise,
+generic, and safe for a public repository: project layout, verification
+commands, edit boundaries, and maintenance workflows belong there; personal
+preferences, private paths, credentials, and employer-specific details do not.
+
+Claude Code reads `CLAUDE.md`, which imports `AGENTS.md` and adds only thin
+Claude-specific notes. Cursor reads `.cursor/rules/emacs-config.mdc`, an
+always-on project rule that points back at the same canonical instructions.
+This keeps Codex, Claude, Cursor, and other agents aligned without duplicating
+the full guidance in multiple files.
+
+Local personal agent notes should stay untracked. `CLAUDE.local.md`,
+`.claude/settings.local.json`, and `.cursor/rules/*.local.mdc` are ignored by
+git for that reason.
 
 ## Test
 

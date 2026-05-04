@@ -248,6 +248,39 @@
     (insert-file-contents (expand-file-name ".gitignore" emacs-config-test-root))
     (should (search-forward "*.elc" nil t))))
 
+(ert-deftest emacs-config/agent-context-files-share-canonical-instructions ()
+  (let ((agents-file (expand-file-name "AGENTS.md" emacs-config-test-root))
+        (claude-file (expand-file-name "CLAUDE.md" emacs-config-test-root))
+        (cursor-rule (expand-file-name ".cursor/rules/emacs-config.mdc"
+                                       emacs-config-test-root)))
+    (dolist (file (list agents-file claude-file cursor-rule))
+      (should (file-exists-p file)))
+    (with-temp-buffer
+      (insert-file-contents agents-file)
+      (let ((instructions (buffer-string)))
+        (should (string-match-p "lisp/config-\\*\\.el" instructions))
+        (should (string-match-p "scripts/setup\\.el" instructions))
+        (should (string-match-p "tests/init-test\\.el" instructions))
+        (should (string-match-p "make compile" instructions))
+        (should (string-match-p "make test" instructions))
+        (should (string-match-p "Do not edit files under `elpa/" instructions))))
+    (with-temp-buffer
+      (insert-file-contents claude-file)
+      (should (string-prefix-p "@AGENTS.md" (buffer-string))))
+    (with-temp-buffer
+      (insert-file-contents cursor-rule)
+      (let ((rule (buffer-string)))
+        (should (string-match-p "alwaysApply: true" rule))
+        (should (string-match-p "@AGENTS\\.md" rule))))))
+
+(ert-deftest emacs-config/local-agent-notes-are-ignored ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name ".gitignore" emacs-config-test-root))
+    (let ((gitignore (buffer-string)))
+      (should (string-match-p "CLAUDE\\.local\\.md" gitignore))
+      (should (string-match-p "\\.claude/settings\\.local\\.json" gitignore))
+      (should (string-match-p "\\.cursor/rules/\\*\\.local\\.mdc" gitignore)))))
+
 (ert-deftest emacs-config/make-clean-targets-are-split-by-package-state ()
   (with-temp-buffer
     (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
