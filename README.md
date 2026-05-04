@@ -30,6 +30,9 @@ This repository is meant to live at `~/.emacs.d`.
 - JavaScript/TypeScript support: JS, TS, TSX, JSON, TypeScript language server
   through Eglot, project-local Prettier formatting, node_modules/.bin, and
   package-manager script helpers
+- Markup and data-file support: Markdown/GFM editing and preview hooks,
+  Mermaid diagram rendering commands, YAML with optional language-server
+  support, and JSON helpers for jq and JSON language-server support
 
 ## Layout
 
@@ -49,6 +52,7 @@ libraries:
   support
 - `tahoma-js.el`: JavaScript, TypeScript, TSX, JSON, Prettier, package
   scripts, and TypeScript language-server support
+- `tahoma-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
 
 ## Test
 
@@ -115,6 +119,17 @@ make test
 `make setup` refreshes package archives, installs the managed package set, and
 compiles the `vterm` native module, then freshens local `.elc` files. `vterm`
 requires a working compiler toolchain and `cmake` on the machine.
+
+## Optional External Tools
+
+Some language modules use external command-line tools when they are present and
+fall back gracefully when they are not:
+
+- Markdown preview: `pandoc`, `multimarkdown`, or `markdown`
+- Mermaid rendering: `mmdc` from `@mermaid-js/mermaid-cli`
+- JSON filtering/pretty-printing: `jq`
+- JSON/YAML language servers: `vscode-json-language-server` and
+  `yaml-language-server`
 
 ## Restore
 

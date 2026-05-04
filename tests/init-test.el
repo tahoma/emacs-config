@@ -22,6 +22,11 @@
 (defvar my/js-basic-offset)
 (defvar my/js-fill-column)
 (defvar my/js-format-on-save)
+(defvar my/markup-basic-offset)
+(defvar my/markup-fill-column)
+(defvar my/markup-json-language-server-command)
+(defvar my/markup-mermaid-output-extension)
+(defvar my/markup-yaml-language-server-command)
 (declare-function my/project-root "tahoma-project")
 (declare-function my/c-default-compile-command "tahoma-c")
 (declare-function my/c-format-buffer "tahoma-c")
@@ -35,6 +40,11 @@
 (declare-function my/js-format-region-or-buffer "tahoma-js")
 (declare-function my/js-package-script-command "tahoma-js")
 (declare-function my/js-project-root "tahoma-js")
+(declare-function my/markup-json-jq-region-or-buffer "tahoma-markup")
+(declare-function my/markup-markdown-preview "tahoma-markup")
+(declare-function my/markup-mermaid-compile "tahoma-markup")
+(declare-function my/markup-mermaid-compile-command "tahoma-markup")
+(declare-function my/markup-yaml-format-region-or-buffer "tahoma-markup")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -68,7 +78,8 @@
                      tahoma-c
                      tahoma-sql
                      tahoma-rust
-                     tahoma-js))
+                     tahoma-js
+                     tahoma-markup))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -90,6 +101,7 @@
                                "lisp/tahoma-sql.el"
                                "lisp/tahoma-rust.el"
                                "lisp/tahoma-js.el"
+                               "lisp/tahoma-markup.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -112,6 +124,7 @@
       (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-rust\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-js\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-markup\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -543,6 +556,97 @@
   (when (boundp 'treesit-language-source-alist)
     (dolist (language '(javascript typescript tsx json))
       (should (assoc language treesit-language-source-alist)))))
+
+;;; Markup and data-file editing environment
+(ert-deftest emacs-config/markup-helper-packages-are-installed ()
+  (dolist (feature '(markdown-mode yaml-mode mermaid-mode eglot))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-markup-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '("markdown-mode" "yaml-mode" "mermaid-mode"))
+      (should (search-forward package nil t)))))
+
+(ert-deftest emacs-config/markdown-mode-enables-documentation-defaults ()
+  (with-temp-buffer
+    (markdown-mode)
+    (should (= fill-column my/markup-fill-column))
+    (should (= tab-width my/markup-basic-offset))
+    (should (not indent-tabs-mode))
+    (should (bound-and-true-p visual-line-mode))
+    (should markdown-fontify-code-blocks-natively)
+    (should (assoc "mermaid" markdown-code-lang-modes))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/markup-fill-region-or-paragraph))
+    (should (eq (local-key-binding (kbd "C-c p"))
+                'my/markup-markdown-preview))))
+
+(ert-deftest emacs-config/json-mode-keeps-prettier-and-adds-json-helpers ()
+  (with-temp-buffer
+    (json-mode)
+    (should (= tab-width my/markup-basic-offset))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/js-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c j"))
+                'my/markup-json-jq-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))))
+
+(ert-deftest emacs-config/yaml-mode-enables-config-file-defaults ()
+  (with-temp-buffer
+    (yaml-mode)
+    (should (= fill-column my/markup-fill-column))
+    (should (= tab-width my/markup-basic-offset))
+    (should (not indent-tabs-mode))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p flymake-mode))
+    (should (eq (local-key-binding (kbd "C-c f"))
+                'my/markup-yaml-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c e")) 'eglot))))
+
+(ert-deftest emacs-config/mermaid-mode-enables-render-command ()
+  (let ((file (make-temp-file "emacs-config-diagram-" nil ".mmd")))
+    (unwind-protect
+        (with-temp-buffer
+          (set-visited-file-name file t t)
+          (mermaid-mode)
+          (should (= fill-column my/markup-fill-column))
+          (should (= tab-width my/markup-basic-offset))
+          (should (not indent-tabs-mode))
+          (should (string-match-p "\\bmmdc\\b" compile-command))
+          (should (string-match-p "\\.svg\\b" compile-command))
+          (should (string-match-p "\\.svg\\b"
+                                  (my/markup-mermaid-compile-command)))
+          (should (eq (local-key-binding (kbd "C-c c"))
+                      'my/markup-mermaid-compile)))
+      (delete-file file))))
+
+(ert-deftest emacs-config/markup-eglot-uses-json-and-yaml-language-servers ()
+  (let ((json-entry (assoc '(json-mode json-ts-mode) eglot-server-programs))
+        (yaml-entry (assoc '(yaml-mode yaml-ts-mode) eglot-server-programs)))
+    (should json-entry)
+    (should yaml-entry)
+    (should (equal (cdr json-entry) my/markup-json-language-server-command))
+    (should (equal (cdr yaml-entry) my/markup-yaml-language-server-command))))
+
+(ert-deftest emacs-config/markup-file-associations-cover-docs-and-configs ()
+  (should (memq (assoc-default "README.md" auto-mode-alist #'string-match-p)
+                '(gfm-mode markdown-mode)))
+  (should (eq (assoc-default "notes.markdown" auto-mode-alist #'string-match-p)
+              'markdown-mode))
+  (should (memq (assoc-default "workflow.yml" auto-mode-alist #'string-match-p)
+                '(yaml-mode yaml-ts-mode)))
+  (should (memq (assoc-default ".clang-format" auto-mode-alist #'string-match-p)
+                '(yaml-mode yaml-ts-mode)))
+  (should (eq (assoc-default "architecture.mmd" auto-mode-alist #'string-match-p)
+              'mermaid-mode))
+  (should (eq (assoc-default "sequence.mermaid" auto-mode-alist #'string-match-p)
+              'mermaid-mode)))
+
+(ert-deftest emacs-config/markup-tree-sitter-sources-are-registered ()
+  (when (boundp 'treesit-language-source-alist)
+    (should (assoc 'yaml treesit-language-source-alist))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

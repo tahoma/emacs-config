@@ -38,7 +38,10 @@
     typescript-mode
     web-mode
     json-mode
-    add-node-modules-path))
+    add-node-modules-path
+    markdown-mode
+    yaml-mode
+    mermaid-mode))
 
 ;; Mirror init.el's archive configuration so setup can run before init.el has
 ;; loaded and still fetch packages from the same sources.

@@ -15,6 +15,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/tahoma-sql.elc \
 	lisp/tahoma-rust.elc \
 	lisp/tahoma-js.elc \
+	lisp/tahoma-markup.elc \
 	scripts/compile.elc \
 	scripts/setup.elc \
 	tests/init-test.elc
