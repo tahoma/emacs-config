@@ -9,19 +9,26 @@
 
 (require 'ert)
 
+;; Resolve paths relative to the test file so the suite works from `make test',
+;; direct batch invocation, or an arbitrary current working directory.
 (defconst emacs-config-test-root
   (file-name-directory
    (directory-file-name
     (file-name-directory
      (or load-file-name buffer-file-name)))))
 
+;; The config enables history-writing modes. Point them at temporary files so
+;; tests never mutate a user's normal interactive Emacs state.
 (setq recentf-save-file
       (expand-file-name "emacs-config-recentf-test" temporary-file-directory)
       savehist-file
       (expand-file-name "emacs-config-savehist-test" temporary-file-directory))
 
+;; Load the real init file. These are configuration tests, so they intentionally
+;; exercise the same startup path a user gets after cloning the repo.
 (load (expand-file-name "init.el" emacs-config-test-root) nil t)
 
+;;; Startup and package-management contract
 (ert-deftest emacs-config/provides-init-feature ()
   (should (featurep 'init)))
 
@@ -43,6 +50,7 @@
   (should (featurep 'use-package))
   (should use-package-always-ensure))
 
+;;; Baseline interactive behavior
 (ert-deftest emacs-config/basic-ui-defaults-are-enabled ()
   (should inhibit-startup-screen)
   (should (eq ring-bell-function 'ignore))
@@ -55,6 +63,7 @@
   (should (equal custom-file
                  (expand-file-name "custom.el" user-emacs-directory))))
 
+;;; Project helper behavior
 (ert-deftest emacs-config/project-root-falls-back-to-default-directory ()
   (let ((root (file-name-as-directory (make-temp-file "emacs-config-test-" t))))
     (unwind-protect
@@ -75,6 +84,7 @@
                            (file-truename root)))))
       (delete-directory root t))))
 
+;;; Integrated tools
 (ert-deftest emacs-config/magit-is-installed-and-bound ()
   (should (require 'magit nil t))
   (should (fboundp 'magit-status))
@@ -103,6 +113,7 @@
   (should (eq (lookup-key global-map (kbd "C-h x")) 'helpful-command))
   (should (eq (lookup-key global-map (kbd "C-c h")) 'helpful-at-point)))
 
+;;; Emacs Lisp development environment
 (ert-deftest emacs-config/elisp-helper-packages-are-installed ()
   (dolist (feature '(paredit
                      rainbow-delimiters
