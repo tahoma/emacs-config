@@ -11,7 +11,7 @@ This repository is meant to live at `~/.emacs.d`.
 - `.gitignore`: local Emacs state and generated files to keep out of git
 - `scripts/setup.el`: fresh-machine dependency bootstrap
 - `scripts/compile.el`: byte-compilation helper for first-party ELisp
-- `scripts/host.sh`: host-level external tool helper
+- `scripts/host.el`: host-level external tool helper
 - `scripts/user.el`: user shell, editor, PATH, terminal, and MCP client helper
 - `tests/init-test.el`: ERT tests for the config
 - `AGENTS.md`: shared project instructions for coding agents
@@ -187,10 +187,10 @@ prefixes and let Emacs remind you of the leaves.
   out of the public config repo.
 - Use `C-c E` for direnv/envrc project environments and `C-c l` to inspect or
   install tree-sitter grammars.
-- On a new machine, run `make host`, `make user`, `make setup`, and `make test`
-  in that order. Use `HOST_INSTALL=1`, `USER_INSTALL=1`, and
-  `USER_MCP_INSTALL=1` only when you want the helpers to modify the host or user
-  environment.
+- On a new machine, after stock Emacs is installed, run `make host`, `make
+  user`, `make setup`, and `make test` in that order. Use `HOST_INSTALL=1`,
+  `USER_INSTALL=1`, and `USER_MCP_INSTALL=1` only when you want the helpers to
+  modify the host or user environment.
 
 ## Agent Context
 
@@ -292,6 +292,10 @@ availability for Codex, Claude Code, and Cursor Agent. It intentionally does not
 manage project-local virtualenvs, debug adapters, commercial agent
 authentication, or per-user shell profile settings.
 
+`scripts/host.el` is standalone batch Elisp. It assumes a working stock Emacs
+executable is already installed, but it does not load `init.el` or third-party
+packages, so it is safe to run before `make setup`.
+
 ## User Setup
 
 Show whether user shell settings are configured for terminal Emacs, CLI editor
@@ -368,7 +372,8 @@ load with all packages available.
 
 ## Fresh Machine Setup
 
-Clone this repository as `~/.emacs.d`, then run setup once:
+Install stock Emacs through your operating system's normal package path, clone
+this repository as `~/.emacs.d`, then run setup once:
 
 ```sh
 cd ~/.emacs.d

@@ -56,6 +56,7 @@
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"
+    "scripts/host.el"
     "scripts/user.el"
     "tests/init-test.el"))
 

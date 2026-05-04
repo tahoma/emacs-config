@@ -4,7 +4,7 @@
 ;; This helper is deliberately standalone batch Elisp. It does not load init.el,
 ;; package archives, or third-party packages, so `make user' is safe before
 ;; `make setup'. A working Emacs executable is the only bootstrap dependency;
-;; host-level installation of Emacs and external tools stays in scripts/host.sh.
+;; host-level external tool setup stays in scripts/host.el.
 ;;
 ;; By default this script is a dry run. It reports shell, terminal, and MCP
 ;; client status. It writes user dotfiles only when USER_INSTALL=1, and writes

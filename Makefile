@@ -48,6 +48,7 @@ FIRST_PARTY_ELC = init.elc \
 	lisp/config-python.elc \
 	lisp/config-treesit.elc \
 	scripts/compile.elc \
+	scripts/host.elc \
 	scripts/setup.elc \
 	scripts/user.elc \
 	tests/init-test.elc
@@ -59,7 +60,7 @@ help: ## Show available Make targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {gsub(/^ /, "", $$2); printf "  %-10s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 host: ## Show host setup commands; set HOST_INSTALL=1 to execute them.
-	HOST_INSTALL=$(HOST_INSTALL) bash scripts/host.sh
+	HOST_INSTALL=$(HOST_INSTALL) $(EMACS) -Q --batch -l scripts/host.el
 
 user: ## Show user setup; set USER_INSTALL=1 and/or USER_MCP_INSTALL=1 to apply.
 	USER_INSTALL=$(USER_INSTALL) USER_MCP_INSTALL=$(USER_MCP_INSTALL) USER_MCP_CLIENTS="$(USER_MCP_CLIENTS)" USER_SHELL_FILE="$(USER_SHELL_FILE)" USER_TMUX_FILE="$(USER_TMUX_FILE)" USER_EMACS_MCP_SCRIPT="$(USER_EMACS_MCP_SCRIPT)" USER_CLAUDE_CONFIG_FILE="$(USER_CLAUDE_CONFIG_FILE)" USER_CODEX_CONFIG_FILE="$(USER_CODEX_CONFIG_FILE)" USER_CURSOR_MCP_FILE="$(USER_CURSOR_MCP_FILE)" $(EMACS) -Q --batch -l scripts/user.el

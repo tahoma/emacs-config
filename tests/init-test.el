@@ -401,6 +401,7 @@
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
+                               "scripts/host.el"
                                "scripts/user.el"
                                "tests/init-test.el"))
         (should (search-forward (prin1-to-string relative-file) nil t))))))
@@ -500,6 +501,7 @@
       (should (string-match-p "lisp/config-markup\\.elc" makefile))
       (should (string-match-p "lisp/config-python\\.elc" makefile))
       (should (string-match-p "lisp/config-treesit\\.elc" makefile))
+      (should (string-match-p "scripts/host\\.elc" makefile))
       (should (string-match-p "scripts/user\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
@@ -521,7 +523,8 @@
     (let ((makefile (buffer-string)))
       (should (string-match-p "^HOST_INSTALL \\?= 0" makefile))
       (should (string-match-p "^host:.*## .*HOST_INSTALL=1" makefile))
-      (should (string-match-p "bash scripts/host\\.sh" makefile)))))
+      (should (string-match-p " -Q --batch -l scripts/host\\.el" makefile))
+      (should-not (string-match-p "scripts/host\\.sh" makefile)))))
 
 (ert-deftest emacs-config/make-user-target-documents-user-setup ()
   (with-temp-buffer
@@ -542,7 +545,7 @@
       (should-not (string-match-p "scripts/user\\.sh" makefile)))))
 
 (ert-deftest emacs-config/host-helper-is-safe-and-platform-aware ()
-  (let ((host-helper (expand-file-name "scripts/host.sh"
+  (let ((host-helper (expand-file-name "scripts/host.el"
                                        emacs-config-test-root)))
     (should (file-exists-p host-helper))
     (with-temp-buffer
@@ -550,6 +553,8 @@
       (let ((script (buffer-string)))
         (should (string-match-p "HOST_INSTALL" script))
         (should (string-match-p "Dry run" script))
+        (should (string-match-p "stock Emacs" script))
+        (should (string-match-p "init\\.el" script))
         (should (string-match-p "Darwin" script))
         (should (string-match-p "Ubuntu/Debian" script))
         (should (string-match-p "Windows host setup" script))
