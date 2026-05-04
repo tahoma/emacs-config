@@ -9,6 +9,7 @@
 
 ;;; Code:
 
+(require 'server)
 (require 'subr-x)
 
 (defgroup my/terminal nil
@@ -29,6 +30,21 @@ Terminal emulators and multiplexers often cap OSC 52 payloads. Keeping a
 bounded default avoids flooding a terminal with huge escape sequences when a
 large region is killed accidentally."
   :type 'integer
+  :group 'my/terminal)
+
+(defcustom my/terminal-start-server t
+  "When non-nil, start an Emacs server during interactive sessions.
+The server is what makes `emacsclient -t -a \"\"' fast and reliable for Git,
+SSH shells, and other command-line tools that ask for an editor. Batch runs do
+not start a server because build and test commands should stay self-contained."
+  :type 'boolean
+  :group 'my/terminal)
+
+(defcustom my/terminal-editor-command "emacsclient -t -a \"\""
+  "Editor command recommended for terminal-first command-line workflows.
+The `-t' flag keeps the client in the current terminal, while `-a \"\"' starts a
+fresh server-backed Emacs if no server is already available."
+  :type 'string
   :group 'my/terminal)
 
 (defun my/terminal-frame-p (&optional frame)
@@ -92,7 +108,30 @@ the user's actual clipboard."
   (when (my/terminal-frame-p)
     (setq interprogram-cut-function #'my/terminal-osc52-copy)))
 
+(defun my/terminal-editor-environment ()
+  "Return EDITOR-style environment entries managed by this config.
+Setting these inside Emacs affects shells and subprocesses launched from Emacs.
+Users should still export the same values in their login shell so Git and other
+CLI tools launched outside Emacs get the fast `emacsclient -t' path too."
+  `(("EDITOR" . ,my/terminal-editor-command)
+    ("VISUAL" . ,my/terminal-editor-command)
+    ("GIT_EDITOR" . ,my/terminal-editor-command)))
+
+(defun my/terminal-apply-editor-environment ()
+  "Set EDITOR, VISUAL, and GIT_EDITOR for subprocesses launched from Emacs."
+  (dolist (entry (my/terminal-editor-environment))
+    (setenv (car entry) (cdr entry))))
+
+(defun my/terminal-maybe-start-server ()
+  "Start the Emacs server for `emacsclient' when this is an interactive session."
+  (when (and my/terminal-start-server
+             (not noninteractive)
+             (not (server-running-p)))
+    (server-start)))
+
 (my/terminal-apply-osc52-clipboard)
+(my/terminal-apply-editor-environment)
+(my/terminal-maybe-start-server)
 
 (provide 'config-terminal)
 

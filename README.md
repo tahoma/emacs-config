@@ -32,7 +32,8 @@ This repository is meant to live at `~/.emacs.d`.
   modifier keys, Dired, external open/reveal commands, terminal clipboards,
   browser launchers, trash behavior, and shell selection
 - Terminal integration: OSC 52 clipboard copy for terminal frames, including
-  SSH sessions where local OS clipboard tools would run on the wrong host
+  SSH sessions where local OS clipboard tools would run on the wrong host,
+  plus an `emacsclient -t` editor environment for CLI tools
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
@@ -189,6 +190,21 @@ host-level external tools. `make setup` refreshes package archives, installs
 the managed package set, and compiles the `vterm` native module, then freshens
 local `.elc` files. `vterm` requires a working compiler toolchain and `cmake`
 on the machine.
+
+## Terminal Editor
+
+For terminal-heavy work, point shell editor variables at the Emacs server:
+
+```sh
+export EDITOR='emacsclient -t -a ""'
+export VISUAL="$EDITOR"
+export GIT_EDITOR="$EDITOR"
+```
+
+The config starts an Emacs server during interactive sessions when one is not
+already running, and it sets the same variables for subprocesses launched from
+inside Emacs. `emacsclient -t` keeps Git commits and other CLI editor requests
+inside the current terminal; `-a ""` starts a server-backed Emacs if needed.
 
 ## Optional External Tools
 
