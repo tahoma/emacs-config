@@ -1,10 +1,13 @@
 EMACS ?= emacs
 HOST_INSTALL ?= 0
+USER_INSTALL ?= 0
+USER_SHELL_FILE ?=
+USER_TMUX_FILE ?=
 RM_RF ?= rm -rf
 
 .DEFAULT_GOAL := help
 
-.PHONY: clean compile help host realclean setup test
+.PHONY: clean compile help host realclean setup test user
 
 FIRST_PARTY_ELC = init.elc \
 	lisp/config-package.elc \
@@ -39,6 +42,9 @@ help: ## Show available Make targets.
 
 host: ## Show host setup commands; set HOST_INSTALL=1 to execute them.
 	HOST_INSTALL=$(HOST_INSTALL) bash scripts/host.sh
+
+user: ## Show user shell setup; set USER_INSTALL=1 to update dotfiles.
+	USER_INSTALL=$(USER_INSTALL) USER_SHELL_FILE="$(USER_SHELL_FILE)" USER_TMUX_FILE="$(USER_TMUX_FILE)" bash scripts/user.sh
 
 clean: ## Remove runtime files and first-party bytecode, preserving packages.
 	$(RM) $(FIRST_PARTY_ELC) $(RUNTIME_FILES) *~ \#*\# .\#*

@@ -2,10 +2,10 @@
 # Configure host-level tools used by this Emacs config.
 #
 # This script is intentionally a dry-run by default. It prints the package
-# manager and shell-environment commands that make the surrounding machine a
-# better host for the Emacs configuration, but it only executes them when called
-# with HOST_INSTALL=1. That keeps `make host' safe to run while still providing a
-# one-command path for fresh machines.
+# manager commands that make the surrounding machine a better host for the Emacs
+# configuration, but it only executes them when called with HOST_INSTALL=1. That
+# keeps `make host' safe to run while still providing a one-command path for
+# fresh machines. Per-user shell profile setup lives in scripts/user.sh.
 
 set -euo pipefail
 
@@ -79,56 +79,6 @@ show_tool_status() {
       show_tools python py explorer.exe clip.exe powershell.exe pwsh.exe winget
       ;;
   esac
-}
-
-print_shell_notes() {
-  section "Shell environment notes"
-  case "$(uname -s)" in
-    Darwin)
-      if have brew; then
-        local brew_prefix
-        brew_prefix="$(brew --prefix)"
-        if [[ ":$PATH:" != *":$brew_prefix/bin:"* ]]; then
-          say "Homebrew is installed, but $brew_prefix/bin is not on PATH for this shell."
-          say "Consider adding this to ~/.zprofile or ~/.zshrc:"
-          say "  eval \"\$($brew_prefix/bin/brew shellenv)\""
-        else
-          say "Homebrew's bin directory is already visible on PATH."
-        fi
-      else
-        say "Homebrew is not installed. Install it first if you want make host HOST_INSTALL=1 to manage macOS packages."
-      fi
-      ;;
-    Linux)
-      if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-        say "~/.local/bin is not on PATH. pipx-installed tools may be hidden until the shell profile is updated."
-        say "Consider adding this to ~/.profile, ~/.bashrc, or ~/.zshrc:"
-        say "  export PATH=\"\$HOME/.local/bin:\$PATH\""
-      else
-        say "~/.local/bin is already visible on PATH."
-      fi
-      if have fdfind && ! have fd; then
-        say "Debian-style fd is installed as fdfind. The host install path can add an fd shim in ~/.local/bin."
-      fi
-      ;;
-    CYGWIN* | MINGW* | MSYS*)
-      say "On native Windows, use PowerShell, Git Bash, or MSYS2 with the same PATH Emacs sees."
-      say "After installing command-line tools, restart Emacs so exec-path picks them up."
-      ;;
-  esac
-}
-
-print_terminal_notes() {
-  section "Terminal environment notes"
-  say "For terminal Emacs, use a capable TERM such as xterm-256color outside tmux or tmux-256color inside tmux."
-  say "Avoid TERM=dumb except for intentionally minimal command output."
-  say "For tmux, enable mouse, truecolor, and clipboard passthrough in ~/.tmux.conf when your terminal supports them:"
-  say "  set -g mouse on"
-  say "  set -g set-clipboard on"
-  say "  set -as terminal-features ',xterm-256color:RGB'"
-  say "Older tmux releases may need this truecolor form instead:"
-  say "  set -ga terminal-overrides ',*:Tc'"
-  say "OSC 52 clipboard copy also requires the local terminal emulator to allow clipboard escape sequences."
 }
 
 setup_macos() {
@@ -226,11 +176,12 @@ main() {
       ;;
   esac
 
-  print_shell_notes
-  print_terminal_notes
+  section "User environment"
+  say "Run 'make user' to check shell editor variables, PATH, and terminal/tmux settings."
 
   section "After host setup"
   say "Restart your shell if PATH changed, then run:"
+  say "  make user"
   say "  make setup"
   say "  make test"
   say "Project-local tools such as pytest, black, debugpy, and codelldb are still best installed per project."

@@ -279,7 +279,7 @@
     (let ((makefile (buffer-string)))
       (should (string-match-p "^\\.DEFAULT_GOAL := help" makefile))
       (should (string-match-p "^\\.PHONY: .*help" makefile))
-      (dolist (target '("help" "host" "setup" "test" "compile" "clean" "realclean"))
+      (dolist (target '("help" "host" "user" "setup" "test" "compile" "clean" "realclean"))
         (should (string-match-p
                  (format "^%s:.*## .+" (regexp-quote target))
                  makefile))))))
@@ -291,6 +291,16 @@
       (should (string-match-p "^HOST_INSTALL \\?= 0" makefile))
       (should (string-match-p "^host:.*## .*HOST_INSTALL=1" makefile))
       (should (string-match-p "bash scripts/host\\.sh" makefile)))))
+
+(ert-deftest emacs-config/make-user-target-documents-user-setup ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
+    (let ((makefile (buffer-string)))
+      (should (string-match-p "^USER_INSTALL \\?= 0" makefile))
+      (should (string-match-p "^USER_SHELL_FILE \\?=" makefile))
+      (should (string-match-p "^USER_TMUX_FILE \\?=" makefile))
+      (should (string-match-p "^user:.*## .*USER_INSTALL=1" makefile))
+      (should (string-match-p "bash scripts/user\\.sh" makefile)))))
 
 (ert-deftest emacs-config/host-helper-is-safe-and-platform-aware ()
   (let ((host-helper (expand-file-name "scripts/host.sh"
@@ -310,11 +320,31 @@
         (should (string-match-p "wl-clipboard" script))
         (should (string-match-p "xdg-utils" script))
         (should (string-match-p "explorer\\.exe" script))
-        (should (string-match-p "Terminal environment notes" script))
-        (should (string-match-p "OSC 52" script))
-        (should (string-match-p "set-clipboard" script))
+        (should (string-match-p "make user" script))
         (should (string-match-p "npm install -g" script))
         (should (string-match-p "pipx ensurepath" script))))))
+
+(ert-deftest emacs-config/user-helper-is-safe-and-idempotent ()
+  (let ((user-helper (expand-file-name "scripts/user.sh"
+                                       emacs-config-test-root)))
+    (should (file-exists-p user-helper))
+    (with-temp-buffer
+      (insert-file-contents user-helper)
+      (let ((script (buffer-string)))
+        (should (string-match-p "USER_INSTALL" script))
+        (should (string-match-p "Dry run" script))
+        (should (string-match-p "USER_INSTALL=1" script))
+        (should (string-match-p "USER_SHELL_FILE" script))
+        (should (string-match-p "USER_TMUX_FILE" script))
+        (should (string-match-p "emacsclient -t -a" script))
+        (should (string-match-p "GIT_EDITOR" script))
+        (should (string-match-p "\\.local/bin" script))
+        (should (string-match-p "brew shellenv" script))
+        (should (string-match-p "/opt/homebrew/bin/brew" script))
+        (should (string-match-p "/home/linuxbrew/\\.linuxbrew/bin/brew" script))
+        (should (string-match-p "set-clipboard" script))
+        (should (string-match-p "terminal-features" script))
+        (should (string-match-p "install_block" script))))))
 
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)

@@ -11,7 +11,8 @@ This repository is meant to live at `~/.emacs.d`.
 - `.gitignore`: local Emacs state and generated files to keep out of git
 - `scripts/setup.el`: fresh-machine dependency bootstrap
 - `scripts/compile.el`: byte-compilation helper for first-party ELisp
-- `scripts/host.sh`: host-level external tool and shell-environment helper
+- `scripts/host.sh`: host-level external tool helper
+- `scripts/user.sh`: user shell, editor, PATH, and terminal profile helper
 - `tests/init-test.el`: ERT tests for the config
 
 ## Features
@@ -131,8 +132,8 @@ current operating system:
 make host
 ```
 
-The target is a dry run by default. To actually install packages and run the
-shell-environment helper commands, opt in explicitly:
+The target is a dry run by default. To actually install packages, opt in
+explicitly:
 
 ```sh
 make host HOST_INSTALL=1
@@ -141,9 +142,34 @@ make host HOST_INSTALL=1
 The host helper detects macOS, Ubuntu/Debian-like Linux, WSL, and native
 Windows shells such as Git Bash or MSYS2. It covers tools such as ripgrep, fd,
 jq, pandoc, direnv, clangd, clang-format, Node-based language servers, Mermaid
-CLI, pipx-managed Python tools, platform clipboard/open helpers, and shell PATH
-notes. It intentionally does not manage project-local virtualenvs or debug
-adapters that belong inside a particular repository.
+CLI, pipx-managed Python tools, and platform clipboard/open helpers. It
+intentionally does not manage project-local virtualenvs, debug adapters, or
+per-user shell profile settings.
+
+## User Setup
+
+Show whether user shell settings are configured for terminal Emacs, CLI editor
+workflows, and tmux:
+
+```sh
+make user
+```
+
+The target is a dry run by default. To update the detected shell startup file
+and `~/.tmux.conf` with managed, idempotent blocks, opt in explicitly:
+
+```sh
+make user USER_INSTALL=1
+```
+
+The user helper checks and can configure `EDITOR`, `VISUAL`, `GIT_EDITOR`,
+`~/.local/bin` on `PATH`, Homebrew/Linuxbrew shell environment loading when
+`brew` is installed, and tmux mouse/clipboard/truecolor settings. Override the
+detected files when needed:
+
+```sh
+make user USER_INSTALL=1 USER_SHELL_FILE=~/.zshrc USER_TMUX_FILE=~/.tmux.conf
+```
 
 ## Compile
 
@@ -182,15 +208,17 @@ Clone this repository as `~/.emacs.d`, then run setup once:
 ```sh
 cd ~/.emacs.d
 make host
+make user
 make setup
 make test
 ```
 
 Run `make host HOST_INSTALL=1` first if you want the helper to install
-host-level external tools. `make setup` refreshes package archives, installs
-the managed package set, and compiles the `vterm` native module, then freshens
-local `.elc` files. `vterm` requires a working compiler toolchain and `cmake`
-on the machine.
+host-level external tools. Run `make user USER_INSTALL=1` if you want the helper
+to write shell editor/PATH/tmux settings into your user dotfiles. `make setup`
+refreshes package archives, installs the managed package set, and compiles the
+`vterm` native module, then freshens local `.elc` files. `vterm` requires a
+working compiler toolchain and `cmake` on the machine.
 
 ## Terminal Editor
 
@@ -201,6 +229,9 @@ export EDITOR='emacsclient -t -a ""'
 export VISUAL="$EDITOR"
 export GIT_EDITOR="$EDITOR"
 ```
+
+`make user USER_INSTALL=1` can add those exports to the detected shell startup
+file, along with PATH and tmux settings used by this config.
 
 The config starts an Emacs server during interactive sessions when one is not
 already running, and it sets the same variables for subprocesses launched from
