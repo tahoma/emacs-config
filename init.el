@@ -33,6 +33,7 @@
 (require 'config-js)
 (require 'config-markup)
 (require 'config-python)
+(require 'config-treesit)
 
 ;; Keep Custom settings out of init.el so hand-written config stays tidy.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

@@ -77,6 +77,8 @@ This repository is meant to live at `~/.emacs.d`.
 - Python support: virtualenv discovery, optional Eglot language-server support,
   ruff/black formatting, pytest and ruff project commands, Python REPL helpers,
   and requirements/pyproject support
+- Tree-sitter grammar management: inspect configured grammars and install one
+  or all missing grammars from Emacs
 
 ## Layout
 
@@ -119,6 +121,7 @@ libraries:
 - `config-markup.el`: Markdown, Mermaid, YAML, and extra JSON support
 - `config-python.el`: Python, virtualenvs, pytest, ruff/black, Eglot, and
   requirements files
+- `config-treesit.el`: tree-sitter grammar status and install helpers
 
 ## Agent Context
 

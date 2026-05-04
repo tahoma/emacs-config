@@ -46,6 +46,7 @@
     "lisp/config-js.el"
     "lisp/config-markup.el"
     "lisp/config-python.el"
+    "lisp/config-treesit.el"
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"

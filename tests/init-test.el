@@ -32,6 +32,8 @@
 (defvar my/python-fill-column)
 (defvar my/python-format-on-save)
 (defvar my/python-language-server-commands)
+(defvar my/treesit-default-language-sources)
+(defvar treesit-language-source-alist)
 (defvar corfu-auto)
 (defvar corfu-count)
 (defvar corfu-cycle)
@@ -132,6 +134,13 @@
 (declare-function my/python-test-file "config-python")
 (declare-function my/python-tool-command "config-python")
 (declare-function my/python-venv-root "config-python")
+(declare-function my/treesit-available-p "config-treesit")
+(declare-function my/treesit-configured-languages "config-treesit")
+(declare-function my/treesit-install-language "config-treesit")
+(declare-function my/treesit-install-missing-grammars "config-treesit")
+(declare-function my/treesit-language-ready-p "config-treesit")
+(declare-function my/treesit-register-default-sources "config-treesit")
+(declare-function my/treesit-status "config-treesit")
 (declare-function my/completion-consult-find "config-completion")
 (declare-function my/completion-consult-line-multi "config-completion")
 (declare-function my/completion-consult-ripgrep "config-completion")
@@ -254,7 +263,8 @@
                      config-rust
                      config-js
                      config-markup
-                     config-python))
+                     config-python
+                     config-treesit))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -291,6 +301,7 @@
                                "lisp/config-js.el"
                                "lisp/config-markup.el"
                                "lisp/config-python.el"
+                               "lisp/config-treesit.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -362,6 +373,7 @@
       (should (string-match-p "lisp/config-js\\.elc" makefile))
       (should (string-match-p "lisp/config-markup\\.elc" makefile))
       (should (string-match-p "lisp/config-python\\.elc" makefile))
+      (should (string-match-p "lisp/config-treesit\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -1788,6 +1800,21 @@
 (ert-deftest emacs-config/python-tree-sitter-source-is-registered ()
   (when (boundp 'treesit-language-source-alist)
     (should (assoc 'python treesit-language-source-alist))))
+
+;;; Tree-sitter grammar management
+(ert-deftest emacs-config/treesit-management-commands-are-bound ()
+  (should (eq (lookup-key global-map (kbd "C-c l s")) 'my/treesit-status))
+  (should (eq (lookup-key global-map (kbd "C-c l i"))
+              'my/treesit-install-language))
+  (should (eq (lookup-key global-map (kbd "C-c l a"))
+              'my/treesit-install-missing-grammars)))
+
+(ert-deftest emacs-config/treesit-management-sees-registered-languages ()
+  (when (my/treesit-available-p)
+    (dolist (language '(c cpp cmake javascript json python rust toml tsx typescript yaml))
+      (should (assoc language my/treesit-default-language-sources)))
+    (dolist (language '(c cpp rust javascript typescript json yaml python))
+      (should (memq language (my/treesit-configured-languages))))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))
