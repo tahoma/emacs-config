@@ -56,6 +56,7 @@
     "init.el"
     "scripts/setup.el"
     "scripts/compile.el"
+    "scripts/user.el"
     "tests/init-test.el"))
 
 ;; Byte-compiling init.el needs macro definitions from installed packages.

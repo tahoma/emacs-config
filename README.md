@@ -12,7 +12,7 @@ This repository is meant to live at `~/.emacs.d`.
 - `scripts/setup.el`: fresh-machine dependency bootstrap
 - `scripts/compile.el`: byte-compilation helper for first-party ELisp
 - `scripts/host.sh`: host-level external tool helper
-- `scripts/user.sh`: user shell, editor, PATH, and terminal profile helper
+- `scripts/user.el`: user shell, editor, PATH, terminal, and MCP client helper
 - `tests/init-test.el`: ERT tests for the config
 - `AGENTS.md`: shared project instructions for coding agents
 - `CLAUDE.md`: Claude Code adapter that imports the shared agent instructions
@@ -331,6 +331,10 @@ detected files when needed:
 ```sh
 make user USER_INSTALL=1 USER_SHELL_FILE=~/.zshrc USER_TMUX_FILE=~/.tmux.conf
 ```
+
+`scripts/user.el` is standalone batch Elisp. It does not load `init.el` or
+third-party packages, so it is safe to run before `make setup`; it only needs a
+working Emacs executable.
 
 ## Compile
 

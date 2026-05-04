@@ -5,7 +5,7 @@
 # manager commands that make the surrounding machine a better host for the Emacs
 # configuration, but it only executes them when called with HOST_INSTALL=1. That
 # keeps `make host' safe to run while still providing a one-command path for
-# fresh machines. Per-user shell profile setup lives in scripts/user.sh.
+# fresh machines. Per-user shell profile setup lives in scripts/user.el.
 
 set -euo pipefail
 

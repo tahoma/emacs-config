@@ -401,6 +401,7 @@
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
+                               "scripts/user.el"
                                "tests/init-test.el"))
         (should (search-forward (prin1-to-string relative-file) nil t))))))
 
@@ -499,6 +500,7 @@
       (should (string-match-p "lisp/config-markup\\.elc" makefile))
       (should (string-match-p "lisp/config-python\\.elc" makefile))
       (should (string-match-p "lisp/config-treesit\\.elc" makefile))
+      (should (string-match-p "scripts/user\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -536,7 +538,8 @@
       (should (string-match-p "^USER_CURSOR_MCP_FILE \\?=" makefile))
       (should (string-match-p "^user:.*## .*USER_INSTALL=1" makefile))
       (should (string-match-p "^user:.*## .*USER_MCP_INSTALL=1" makefile))
-      (should (string-match-p "bash scripts/user\\.sh" makefile)))))
+      (should (string-match-p " -Q --batch -l scripts/user\\.el" makefile))
+      (should-not (string-match-p "scripts/user\\.sh" makefile)))))
 
 (ert-deftest emacs-config/host-helper-is-safe-and-platform-aware ()
   (let ((host-helper (expand-file-name "scripts/host.sh"
@@ -567,7 +570,7 @@
         (should (string-match-p "pipx ensurepath" script))))))
 
 (ert-deftest emacs-config/user-helper-is-safe-and-idempotent ()
-  (let ((user-helper (expand-file-name "scripts/user.sh"
+  (let ((user-helper (expand-file-name "scripts/user.el"
                                        emacs-config-test-root)))
     (should (file-exists-p user-helper))
     (with-temp-buffer
@@ -593,11 +596,13 @@
         (should (string-match-p "/home/linuxbrew/\\.linuxbrew/bin/brew" script))
         (should (string-match-p "set-clipboard" script))
         (should (string-match-p "terminal-features" script))
-        (should (string-match-p "claude mcp add" script))
-        (should (string-match-p "codex mcp add" script))
+        (should (string-match-p "\"claude\" \"mcp\" \"add\"" script))
+        (should (string-match-p "\"codex\" \"mcp\" \"add\"" script))
         (should (string-match-p "\\.cursor/mcp\\.json" script))
+        (should (string-match-p "json-parse-buffer" script))
+        (should (string-match-p "json-serialize" script))
         (should (string-match-p "elisp-dev-mcp-enable" script))
-        (should (string-match-p "install_block" script))))))
+        (should (string-match-p "user--install-block" script))))))
 
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)
