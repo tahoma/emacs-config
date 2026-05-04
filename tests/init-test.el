@@ -87,6 +87,17 @@
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
+(ert-deftest emacs-config/make-help-target-documents-common-targets ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
+    (let ((makefile (buffer-string)))
+      (should (string-match-p "^\\.DEFAULT_GOAL := help" makefile))
+      (should (string-match-p "^\\.PHONY: .*help" makefile))
+      (dolist (target '("help" "setup" "test" "compile" "clean" "realclean"))
+        (should (string-match-p
+                 (format "^%s:.*## .+" (regexp-quote target))
+                 makefile))))))
+
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)
                  "https://elpa.gnu.org/packages/"))

@@ -52,6 +52,14 @@ Or invoke Emacs directly:
 emacs -Q --batch -l tests/init-test.el
 ```
 
+## Help
+
+List the available Make targets:
+
+```sh
+make help
+```
+
 ## Compile
 
 Freshen local byte-compiled ELisp files:
