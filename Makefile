@@ -1,9 +1,22 @@
 EMACS ?= emacs
+RM_RF ?= rm -rf
 
-.PHONY: compile setup test
+.PHONY: clean compile realclean setup test
+
+FIRST_PARTY_ELC = init.elc scripts/compile.elc scripts/setup.elc tests/init-test.elc
+RUNTIME_FILES = custom.el history places recentf savehist package-quickstart.el network-security.data
+RUNTIME_DIRS = .cache auto-save-list backups eln-cache transient tramp url var
+PACKAGE_DIRS = elpa quelpa
+
+clean:
+	$(RM) $(FIRST_PARTY_ELC) $(RUNTIME_FILES) *~ \#*\# .\#*
+	$(RM_RF) $(RUNTIME_DIRS)
 
 compile:
 	$(EMACS) -Q --batch -l scripts/compile.el
+
+realclean: clean
+	$(RM_RF) $(PACKAGE_DIRS)
 
 setup:
 	$(EMACS) -Q --batch -l scripts/setup.el

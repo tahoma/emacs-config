@@ -46,6 +46,24 @@ The generated `.elc` files are local artifacts and are ignored by git. Emacs may
 load a fresh `init.elc` faster than source, but the source files remain the
 canonical project state.
 
+## Clean
+
+Remove local runtime files and first-party byte-compiled artifacts while keeping
+installed packages:
+
+```sh
+make clean
+```
+
+Remove runtime files plus installed package directories:
+
+```sh
+make realclean
+```
+
+After `make realclean`, run `make setup` before expecting the full config to
+load with all packages available.
+
 ## Fresh Machine Setup
 
 Clone this repository as `~/.emacs.d`, then run setup once:

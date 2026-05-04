@@ -53,6 +53,15 @@
     (insert-file-contents (expand-file-name ".gitignore" emacs-config-test-root))
     (should (search-forward "*.elc" nil t))))
 
+(ert-deftest emacs-config/make-clean-targets-are-split-by-package-state ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
+    (let ((makefile (buffer-string)))
+      (should (string-match-p "^clean:" makefile))
+      (should (string-match-p "^realclean: clean" makefile))
+      (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
+      (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
+
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)
                  "https://elpa.gnu.org/packages/"))

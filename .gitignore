@@ -1,9 +1,14 @@
+custom.el
+.cache/
 auto-save-list/
 backups/
 eln-cache/
 elpa/
 history
+network-security.data
+package-quickstart.el
 places
+quelpa/
 recentf
 savehist
 transient/
