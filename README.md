@@ -8,6 +8,21 @@ This repository is meant to live at `~/.emacs.d`.
 
 - `init.el`: handwritten Emacs configuration
 - `.gitignore`: local Emacs state and generated files to keep out of git
+- `tests/init-test.el`: ERT tests for the config
+
+## Test
+
+Run the test suite from the repository root:
+
+```sh
+make test
+```
+
+Or invoke Emacs directly:
+
+```sh
+emacs -Q --batch -l tests/init-test.el
+```
 
 ## Restore
 
