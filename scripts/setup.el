@@ -35,6 +35,7 @@
     exec-path-from-shell
     vterm
     magit
+    with-editor
     paredit
     rainbow-delimiters
     aggressive-indent

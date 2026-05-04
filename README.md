@@ -33,7 +33,8 @@ This repository is meant to live at `~/.emacs.d`.
   browser launchers, trash behavior, and shell selection
 - Terminal integration: OSC 52 clipboard copy for terminal frames, including
   SSH sessions where local OS clipboard tools would run on the wrong host,
-  plus an `emacsclient -t` editor environment for CLI tools
+  plus an `emacsclient -t` editor environment for CLI tools and `with-editor`
+  support for shells launched from Emacs
 - Snippet support: Yasnippet with small repo-owned templates for common test and
   source skeletons
 - Agentic workflow support: project-root Codex CLI launch helpers, project
@@ -203,8 +204,10 @@ export GIT_EDITOR="$EDITOR"
 
 The config starts an Emacs server during interactive sessions when one is not
 already running, and it sets the same variables for subprocesses launched from
-inside Emacs. `emacsclient -t` keeps Git commits and other CLI editor requests
-inside the current terminal; `-a ""` starts a server-backed Emacs if needed.
+inside Emacs. `with-editor` also exports editor variables for `shell`, `eshell`,
+`term`, `vterm`, and one-shot shell commands. `emacsclient -t` keeps Git commits
+and other CLI editor requests inside the current terminal; `-a ""` starts a
+server-backed Emacs if needed.
 
 ## Optional External Tools
 

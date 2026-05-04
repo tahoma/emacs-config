@@ -12,6 +12,11 @@
 (require 'server)
 (require 'subr-x)
 
+(declare-function shell-command-with-editor-mode "with-editor")
+(declare-function with-editor-async-shell-command "with-editor")
+(declare-function with-editor-export-editor "with-editor")
+(declare-function with-editor-shell-command "with-editor")
+
 (defgroup my/terminal nil
   "Terminal-frame behavior for this Emacs config."
   :group 'convenience)
@@ -45,6 +50,14 @@ not start a server because build and test commands should stay self-contained."
 The `-t' flag keeps the client in the current terminal, while `-a \"\"' starts a
 fresh server-backed Emacs if no server is already available."
   :type 'string
+  :group 'my/terminal)
+
+(defcustom my/terminal-with-editor-enabled t
+  "When non-nil, make Emacs-launched shells export editor variables.
+This uses the `with-editor' package so commands started from shell, eshell,
+term, vterm, and `shell-command' can open editor requests in the current Emacs
+server instead of hanging on a nested editor."
+  :type 'boolean
   :group 'my/terminal)
 
 (defun my/terminal-frame-p (&optional frame)
@@ -128,6 +141,30 @@ CLI tools launched outside Emacs get the fast `emacsclient -t' path too."
              (not noninteractive)
              (not (server-running-p)))
     (server-start)))
+
+(defun my/terminal-enable-with-editor ()
+  "Teach shells launched inside Emacs how to call back into this Emacs.
+The hook coverage handles long-lived shell buffers, while the remaps and global
+mode cover one-shot `M-!' and `M-&' commands. This is the inside-Emacs
+counterpart to exporting EDITOR in the user's login shell."
+  (when my/terminal-with-editor-enabled
+    (add-hook 'shell-mode-hook #'with-editor-export-editor)
+    (add-hook 'eshell-mode-hook #'with-editor-export-editor)
+    (add-hook 'term-exec-hook #'with-editor-export-editor)
+    (add-hook 'vterm-mode-hook #'with-editor-export-editor)
+    (keymap-global-set "<remap> <async-shell-command>"
+                       #'with-editor-async-shell-command)
+    (keymap-global-set "<remap> <shell-command>"
+                       #'with-editor-shell-command)
+    (shell-command-with-editor-mode 1)))
+
+(use-package with-editor
+  :commands (shell-command-with-editor-mode
+             with-editor-async-shell-command
+             with-editor-export-editor
+             with-editor-shell-command)
+  :config
+  (my/terminal-enable-with-editor))
 
 (my/terminal-apply-osc52-clipboard)
 (my/terminal-apply-editor-environment)

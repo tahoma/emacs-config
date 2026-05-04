@@ -51,6 +51,8 @@
 (defvar my/terminal-osc52-max-bytes)
 (defvar my/terminal-editor-command)
 (defvar my/terminal-start-server)
+(defvar my/terminal-with-editor-enabled)
+(defvar shell-command-with-editor-mode)
 (defvar my/snippets-directory)
 (defvar my/agent-codex-command)
 (defvar my/agent-save-project-buffers-before-launch)
@@ -122,6 +124,7 @@
 (declare-function my/terminal-apply-osc52-clipboard "config-terminal")
 (declare-function my/terminal-apply-editor-environment "config-terminal")
 (declare-function my/terminal-editor-environment "config-terminal")
+(declare-function my/terminal-enable-with-editor "config-terminal")
 (declare-function my/terminal-maybe-start-server "config-terminal")
 (declare-function my/terminal-osc52-copy "config-terminal")
 (declare-function my/terminal-osc52-sequence "config-terminal")
@@ -527,6 +530,30 @@
                  (setq started t))))
       (my/terminal-maybe-start-server)
       (should-not started))))
+
+(ert-deftest emacs-config/terminal-with-editor-package-is-installed ()
+  (should (require 'with-editor nil t)))
+
+(ert-deftest emacs-config/setup-installs-terminal-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (should (search-forward "with-editor" nil t))))
+
+(ert-deftest emacs-config/terminal-with-editor-is-enabled-for-shells ()
+  (should my/terminal-with-editor-enabled)
+  (should (bound-and-true-p shell-command-with-editor-mode))
+  (dolist (hook '(shell-mode-hook
+                  eshell-mode-hook
+                  term-exec-hook
+                  vterm-mode-hook))
+    (should (memq #'with-editor-export-editor (symbol-value hook)))))
+
+(ert-deftest emacs-config/terminal-with-editor-remaps-shell-commands ()
+  (should (eq (lookup-key global-map [remap async-shell-command])
+              'with-editor-async-shell-command))
+  (should (eq (lookup-key global-map [remap shell-command])
+              'with-editor-shell-command)))
 
 (ert-deftest emacs-config/custom-file-is-separated ()
   (should (equal custom-file
