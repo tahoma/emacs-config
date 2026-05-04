@@ -31,6 +31,12 @@
 (defvar my/python-fill-column)
 (defvar my/python-format-on-save)
 (defvar my/python-language-server-commands)
+(defvar corfu-auto)
+(defvar corfu-count)
+(defvar corfu-cycle)
+(defvar corfu-on-exact-match)
+(defvar corfu-preview-current)
+(defvar my/completion-corfu-count)
 (defvar my/completion-preview-delay)
 (defvar my/tools-shell-environment-variables)
 (defvar exec-path-from-shell-variables)
@@ -211,7 +217,9 @@
                      consult
                      embark
                      embark-consult
-                     which-key))
+                     which-key
+                     corfu
+                     cape))
     (should (require feature nil t))))
 
 (ert-deftest emacs-config/setup-installs-completion-helper-packages ()
@@ -224,7 +232,9 @@
                        "consult"
                        "embark"
                        "embark-consult"
-                       "which-key"))
+                       "which-key"
+                       "corfu"
+                       "cape"))
       (should (search-forward package nil t)))))
 
 (ert-deftest emacs-config/completion-minibuffer-defaults-are-enabled ()
@@ -234,6 +244,16 @@
   (should (equal completion-styles '(orderless basic)))
   (should (assoc 'file completion-category-overrides))
   (should (= my/completion-preview-delay 0.25)))
+
+(ert-deftest emacs-config/completion-corfu-and-cape-are-global ()
+  (should (bound-and-true-p global-corfu-mode))
+  (should corfu-auto)
+  (should (= corfu-count my/completion-corfu-count))
+  (should corfu-cycle)
+  (should-not corfu-on-exact-match)
+  (should-not corfu-preview-current)
+  (dolist (backend '(cape-file cape-dabbrev cape-keyword))
+    (should (memq backend (default-value 'completion-at-point-functions)))))
 
 (ert-deftest emacs-config/completion-project-search-bindings-are-present ()
   (should (eq (lookup-key global-map (kbd "C-s")) 'consult-line))
@@ -364,14 +384,14 @@
 
 ;;; C and C++ development environment
 (ert-deftest emacs-config/c-helper-packages-are-installed ()
-  (dolist (feature '(corfu clang-format cmake-mode eglot))
+  (dolist (feature '(clang-format cmake-mode eglot))
     (should (require feature nil t))))
 
 (ert-deftest emacs-config/setup-installs-c-helper-packages ()
   (with-temp-buffer
     (insert-file-contents (expand-file-name "scripts/setup.el"
                                             emacs-config-test-root))
-    (dolist (package '(corfu clang-format cmake-mode))
+    (dolist (package '(clang-format cmake-mode))
       (should (search-forward (symbol-name package) nil t)))))
 
 (ert-deftest emacs-config/c-mode-enables-development-defaults ()

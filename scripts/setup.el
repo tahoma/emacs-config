@@ -27,6 +27,8 @@
     embark
     embark-consult
     which-key
+    corfu
+    cape
     exec-path-from-shell
     vterm
     magit
@@ -36,7 +38,6 @@
     eros
     macrostep
     package-lint
-    corfu
     clang-format
     cmake-mode
     sqlformat

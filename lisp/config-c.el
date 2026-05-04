@@ -169,19 +169,6 @@ initial value. Without a prefix, run the detected command immediately."
     (when (and (fboundp 'cmake-ts-mode) (treesit-ready-p 'cmake t))
       (add-to-list 'major-mode-remap-alist '(cmake-mode . cmake-ts-mode)))))
 
-;; Corfu turns completion-at-point candidates from Eglot, dabbrev, and other
-;; sources into a small in-buffer menu. It stays backend-agnostic, which keeps
-;; clangd in charge of C/C++ semantics.
-(use-package corfu
-  :custom
-  (corfu-auto t)
-  (corfu-auto-delay 0.1)
-  (corfu-auto-prefix 2)
-  (corfu-cycle t)
-  (corfu-preview-current nil)
-  :init
-  (global-corfu-mode 1))
-
 ;; clang-format reads the project's .clang-format file when one exists, so the
 ;; buffer command below respects each C/C++ codebase's style.
 (use-package clang-format

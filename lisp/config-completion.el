@@ -14,9 +14,18 @@
 (require 'use-package)
 (require 'config-project)
 
+(declare-function cape-dabbrev "cape")
+(declare-function cape-file "cape")
+(declare-function cape-keyword "cape")
+
 (defcustom my/completion-preview-delay 0.25
   "Preview delay, in seconds, for Consult commands that show live previews."
   :type 'number
+  :group 'convenience)
+
+(defcustom my/completion-corfu-count 14
+  "Number of Corfu completion candidates to show at once."
+  :type 'integer
   :group 'convenience)
 
 (defun my/completion-project-root ()
@@ -59,6 +68,30 @@
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
+
+;; Corfu is the in-buffer companion to Vertico: completion-at-point stays
+;; standard, while candidates from Eglot, modes, tags, and CAPE appear in a
+;; compact popup near point.
+(use-package corfu
+  :custom
+  (corfu-auto t)
+  (corfu-count my/completion-corfu-count)
+  (corfu-cycle t)
+  (corfu-on-exact-match nil)
+  (corfu-preview-current nil)
+  :init
+  (global-corfu-mode 1))
+
+;; CAPE adds small completion-at-point helpers that work even when a language
+;; server is absent: file paths, words from open buffers, and mode keywords.
+;; They are appended so major-mode and Eglot completions keep first refusal.
+(use-package cape
+  :init
+  (dolist (backend '(cape-file cape-dabbrev cape-keyword))
+    (unless (memq backend (default-value 'completion-at-point-functions))
+      (set-default 'completion-at-point-functions
+                   (append (default-value 'completion-at-point-functions)
+                           (list backend))))))
 
 ;; Marginalia adds lightweight annotations in the minibuffer: file metadata,
 ;; command doc hints, variable values, and other context that prevents needless

@@ -17,8 +17,8 @@ This repository is meant to live at `~/.emacs.d`.
 
 - MELPA, GNU ELPA, and Nongnu ELPA package archives
 - Completion and search support: Vertico, Orderless, Marginalia, Consult,
-  Embark, and Which-Key for fast minibuffer selection, project search, and
-  discoverable command prefixes
+  Embark, Which-Key, Corfu, and CAPE for fast minibuffer selection, in-buffer
+  completion, project search, and discoverable command prefixes
 - macOS GUI Emacs shell-environment import so Homebrew tools are visible from
   Emacs.app
 - Magit via `C-c g`
@@ -51,8 +51,8 @@ libraries:
 - `config-package.el`: package archives, priorities, and `use-package`
 - `config-ui.el`: basic interface defaults and Helpful
 - `config-project.el`: project root helpers
-- `config-completion.el`: minibuffer completion, project search, command
-  discovery, and action menus
+- `config-completion.el`: minibuffer completion, in-buffer completion, project
+  search, command discovery, and action menus
 - `config-tools.el`: vterm and Magit
 - `config-elisp.el`: Emacs Lisp development support
 - `config-c.el`: C, C++, CMake, compile, format, and debug support
