@@ -1,9 +1,10 @@
 EMACS ?= emacs
+HOST_INSTALL ?= 0
 RM_RF ?= rm -rf
 
 .DEFAULT_GOAL := help
 
-.PHONY: clean compile help realclean setup test
+.PHONY: clean compile help host realclean setup test
 
 FIRST_PARTY_ELC = init.elc \
 	lisp/config-package.elc \
@@ -33,6 +34,9 @@ PACKAGE_DIRS = elpa quelpa
 
 help: ## Show available Make targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {gsub(/^ /, "", $$2); printf "  %-10s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+host: ## Show host setup commands; set HOST_INSTALL=1 to execute them.
+	HOST_INSTALL=$(HOST_INSTALL) bash scripts/host.sh
 
 clean: ## Remove runtime files and first-party bytecode, preserving packages.
 	$(RM) $(FIRST_PARTY_ELC) $(RUNTIME_FILES) *~ \#*\# .\#*

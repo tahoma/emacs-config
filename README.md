@@ -11,6 +11,7 @@ This repository is meant to live at `~/.emacs.d`.
 - `.gitignore`: local Emacs state and generated files to keep out of git
 - `scripts/setup.el`: fresh-machine dependency bootstrap
 - `scripts/compile.el`: byte-compilation helper for first-party ELisp
+- `scripts/host.sh`: host-level external tool and shell-environment helper
 - `tests/init-test.el`: ERT tests for the config
 
 ## Features
@@ -111,6 +112,28 @@ List the available Make targets:
 make help
 ```
 
+## Host Setup
+
+Show the host-level commands that install optional external tools for the
+current operating system:
+
+```sh
+make host
+```
+
+The target is a dry run by default. To actually install packages and run the
+shell-environment helper commands, opt in explicitly:
+
+```sh
+make host HOST_INSTALL=1
+```
+
+The host helper detects macOS and Ubuntu/Debian-like Linux systems. It covers
+tools such as ripgrep, fd, jq, pandoc, direnv, clangd, clang-format, Node-based
+language servers, Mermaid CLI, pipx-managed Python tools, and shell PATH notes.
+It intentionally does not manage project-local virtualenvs or debug adapters
+that belong inside a particular repository.
+
 ## Compile
 
 Freshen local byte-compiled ELisp files:
@@ -147,13 +170,16 @@ Clone this repository as `~/.emacs.d`, then run setup once:
 
 ```sh
 cd ~/.emacs.d
+make host
 make setup
 make test
 ```
 
-`make setup` refreshes package archives, installs the managed package set, and
-compiles the `vterm` native module, then freshens local `.elc` files. `vterm`
-requires a working compiler toolchain and `cmake` on the machine.
+Run `make host HOST_INSTALL=1` first if you want the helper to install
+host-level external tools. `make setup` refreshes package archives, installs
+the managed package set, and compiles the `vterm` native module, then freshens
+local `.elc` files. `vterm` requires a working compiler toolchain and `cmake`
+on the machine.
 
 ## Optional External Tools
 
@@ -176,18 +202,21 @@ fall back gracefully when they are not:
 On macOS with Homebrew:
 
 ```sh
-brew install cmake jq node pandoc python ruff uv pipx ripgrep fd direnv
-npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+brew install aspell cmake direnv fd jq llvm node pandoc pipx python ripgrep ruff shellcheck uv
+npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
+pipx install sqlparse
 ```
 
 On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-sudo apt install -y build-essential cmake jq nodejs npm pandoc python3 python3-venv python3-pip pipx ripgrep fd-find direnv
-sudo npm install -g @mermaid-js/mermaid-cli vscode-langservers-extracted yaml-language-server
+sudo apt install -y aspell build-essential clang-format clangd cmake curl direnv fd-find gdb git jq libtool-bin lldb nodejs npm pandoc pipx python3 python3-pip python3-venv ripgrep shellcheck
+sudo npm install -g @mermaid-js/mermaid-cli typescript-language-server vscode-langservers-extracted yaml-language-server
 pipx install basedpyright
+pipx install ruff
+pipx install sqlparse
 ```
 
 `vscode-langservers-extracted` provides `vscode-json-language-server`. Mermaid

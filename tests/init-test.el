@@ -222,10 +222,34 @@
     (let ((makefile (buffer-string)))
       (should (string-match-p "^\\.DEFAULT_GOAL := help" makefile))
       (should (string-match-p "^\\.PHONY: .*help" makefile))
-      (dolist (target '("help" "setup" "test" "compile" "clean" "realclean"))
+      (dolist (target '("help" "host" "setup" "test" "compile" "clean" "realclean"))
         (should (string-match-p
                  (format "^%s:.*## .+" (regexp-quote target))
                  makefile))))))
+
+(ert-deftest emacs-config/make-host-target-documents-host-setup ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "Makefile" emacs-config-test-root))
+    (let ((makefile (buffer-string)))
+      (should (string-match-p "^HOST_INSTALL \\?= 0" makefile))
+      (should (string-match-p "^host:.*## .*HOST_INSTALL=1" makefile))
+      (should (string-match-p "bash scripts/host\\.sh" makefile)))))
+
+(ert-deftest emacs-config/host-helper-is-safe-and-platform-aware ()
+  (let ((host-helper (expand-file-name "scripts/host.sh"
+                                       emacs-config-test-root)))
+    (should (file-exists-p host-helper))
+    (with-temp-buffer
+      (insert-file-contents host-helper)
+      (let ((script (buffer-string)))
+        (should (string-match-p "HOST_INSTALL" script))
+        (should (string-match-p "Dry run" script))
+        (should (string-match-p "Darwin" script))
+        (should (string-match-p "Ubuntu/Debian" script))
+        (should (string-match-p "brew install" script))
+        (should (string-match-p "apt-get install" script))
+        (should (string-match-p "npm install -g" script))
+        (should (string-match-p "pipx ensurepath" script))))))
 
 (ert-deftest emacs-config/package-archives-include-melpa ()
   (should (equal (alist-get "gnu" package-archives nil nil #'string=)
