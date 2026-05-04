@@ -17,6 +17,7 @@
 (require 'config-project)
 (require 'config-project-commands)
 (require 'config-navigation)
+(require 'config-notes)
 (require 'config-workspace)
 (require 'config-files)
 (require 'config-buffers)

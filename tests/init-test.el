@@ -84,8 +84,20 @@
 (defvar my/navigation-bookmark-file)
 (defvar my/navigation-prefix)
 (defvar my/navigation-register-preview-delay)
+(defvar my/notes-debug-file)
+(defvar my/notes-decisions-file)
+(defvar my/notes-directory)
+(defvar my/notes-inbox-file)
+(defvar my/notes-prefix)
 (defvar bookmark-default-file)
 (defvar bookmark-save-flag)
+(defvar org-agenda-files)
+(defvar org-capture-templates)
+(defvar org-default-notes-file)
+(defvar org-directory)
+(defvar org-log-done)
+(defvar org-return-follows-link)
+(defvar org-startup-folded)
 (defvar register-preview-delay)
 (defvar create-lockfiles)
 (defvar git-commit-mode-map)
@@ -115,6 +127,17 @@
 (declare-function my/project-command-repeat "config-project-commands")
 (declare-function my/project-command-run "config-project-commands")
 (declare-function my/navigation-ensure-runtime-directory "config-navigation")
+(declare-function my/notes-capture-debug "config-notes")
+(declare-function my/notes-capture-decision "config-notes")
+(declare-function my/notes-capture-note "config-notes")
+(declare-function my/notes-capture-task "config-notes")
+(declare-function my/notes-capture-template "config-notes")
+(declare-function my/notes-capture-templates "config-notes")
+(declare-function my/notes-ensure-files "config-notes")
+(declare-function my/notes-file-seeds "config-notes")
+(declare-function my/notes-open-directory "config-notes")
+(declare-function my/notes-open-inbox "config-notes")
+(declare-function my/notes-project-root "config-notes")
 (declare-function my/tools-import-shell-environment-p "config-tools")
 (declare-function my/c-default-compile-command "config-c")
 (declare-function my/c-format-buffer "config-c")
@@ -262,6 +285,7 @@
                      config-project
                      config-project-commands
                      config-navigation
+                     config-notes
                      config-workspace
                      config-files
                      config-buffers
@@ -301,6 +325,7 @@
                                "lisp/config-project.el"
                                "lisp/config-project-commands.el"
                                "lisp/config-navigation.el"
+                               "lisp/config-notes.el"
                                "lisp/config-workspace.el"
                                "lisp/config-files.el"
                                "lisp/config-buffers.el"
@@ -377,6 +402,7 @@
       (should (string-match-p "lisp/config-terminal\\.elc" makefile))
       (should (string-match-p "lisp/config-project-commands\\.elc" makefile))
       (should (string-match-p "lisp/config-navigation\\.elc" makefile))
+      (should (string-match-p "lisp/config-notes\\.elc" makefile))
       (should (string-match-p "lisp/config-workspace\\.elc" makefile))
       (should (string-match-p "lisp/config-files\\.elc" makefile))
       (should (string-match-p "lisp/config-buffers\\.elc" makefile))
@@ -1208,6 +1234,53 @@
                      ("C-c n f" . frameset-to-register)))
     (should (eq (lookup-key global-map (kbd (car binding)))
                 (cdr binding)))))
+
+;;; Org developer notes
+(ert-deftest emacs-config/notes-org-capture-defaults-are-configured ()
+  (should (equal my/notes-prefix "C-c o"))
+  (should (string-prefix-p (expand-file-name "var/notes/" emacs-config-test-root)
+                           my/notes-directory))
+  (dolist (file (list my/notes-inbox-file
+                      my/notes-decisions-file
+                      my/notes-debug-file))
+    (should (file-exists-p file))
+    (should (string-prefix-p my/notes-directory file)))
+  (should (equal org-directory my/notes-directory))
+  (should (equal org-default-notes-file my/notes-inbox-file))
+  (should (equal org-agenda-files
+                 (list my/notes-inbox-file
+                       my/notes-decisions-file
+                       my/notes-debug-file)))
+  (should (equal org-log-done 'time))
+  (should org-return-follows-link)
+  (should (eq org-startup-folded 'content))
+  (dolist (key '("t" "n" "d" "b"))
+    (should (assoc key org-capture-templates))))
+
+(ert-deftest emacs-config/notes-bindings-and-template-helpers-are-present ()
+  (dolist (binding '(("C-c o c" . org-capture)
+                     ("C-c o a" . org-agenda)
+                     ("C-c o i" . my/notes-open-inbox)
+                     ("C-c o o" . my/notes-open-directory)
+                     ("C-c o t" . my/notes-capture-task)
+                     ("C-c o n" . my/notes-capture-note)
+                     ("C-c o d" . my/notes-capture-decision)
+                     ("C-c o b" . my/notes-capture-debug)))
+    (should (eq (lookup-key global-map (kbd (car binding)))
+                (cdr binding))))
+  (let ((captured nil))
+    (cl-letf (((symbol-function 'org-capture)
+               (lambda (&optional goto keys)
+                 (ignore goto)
+                 (setq captured keys))))
+      (my/notes-capture-task)
+      (should (equal captured "t"))
+      (my/notes-capture-note)
+      (should (equal captured "n"))
+      (my/notes-capture-decision)
+      (should (equal captured "d"))
+      (my/notes-capture-debug)
+      (should (equal captured "b")))))
 
 ;;; Workspace and window ergonomics
 (ert-deftest emacs-config/workspace-window-and-tab-defaults-are-enabled ()

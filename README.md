@@ -34,6 +34,8 @@ This repository is meant to live at `~/.emacs.d`.
   Make, Node, Cargo, and Python project commands
 - Navigation memory: bookmarks persist under `var/`, and registers have
   first-class keys for saved points, text snippets, and window/frame layouts
+- Developer notes: Org capture templates under `C-c o` keep tasks, notes,
+  decisions, and debug logs in local runtime files under `var/notes/`
 - Editing hygiene: generated backup/auto-save files under `var/`,
   save-place, auto-revert, long-line protection, delete-selection behavior, and
   code-buffer whitespace cleanup
@@ -101,6 +103,7 @@ libraries:
 - `config-project-commands.el`: generic project-root command runner using
   compilation buffers
 - `config-navigation.el`: persistent bookmarks and register-based navigation
+- `config-notes.el`: Org capture, agenda files, and local developer notes
 - `config-workspace.el`: window history, directional movement, and tab-bar
   project workspaces
 - `config-files.el`: Dired, Dired-X, Wdired, and project file-management
