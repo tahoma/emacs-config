@@ -30,7 +30,10 @@
     package-lint
     corfu
     clang-format
-    cmake-mode))
+    cmake-mode
+    sqlformat
+    sqlup-mode
+    sql-indent))
 
 ;; Mirror init.el's archive configuration so setup can run before init.el has
 ;; loaded and still fetch packages from the same sources.

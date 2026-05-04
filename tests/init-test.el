@@ -13,9 +13,15 @@
 (defvar savehist-file)
 (defvar my/embedded-c-basic-offset)
 (defvar my/embedded-fill-column)
+(defvar my/sql-default-product)
+(defvar my/sql-fill-column)
+(defvar my/sql-history-file)
 (declare-function my/project-root "tahoma-project")
 (declare-function my/embedded-default-compile-command "tahoma-embedded")
 (declare-function my/embedded-format-buffer "tahoma-embedded")
+(declare-function my/sql-format-region-or-buffer "tahoma-sql")
+(declare-function my/sql-send-region-or-buffer "tahoma-sql")
+(declare-function my/sql-scratch "tahoma-sql")
 
 ;; Resolve paths relative to the test file so the suite works from `make test',
 ;; direct batch invocation, or an arbitrary current working directory.
@@ -46,7 +52,8 @@
                      tahoma-project
                      tahoma-tools
                      tahoma-elisp
-                     tahoma-embedded))
+                     tahoma-embedded
+                     tahoma-sql))
     (should (featurep feature))))
 
 (ert-deftest emacs-config/init-adds-first-party-lisp-to-load-path ()
@@ -65,6 +72,7 @@
                                "lisp/tahoma-tools.el"
                                "lisp/tahoma-elisp.el"
                                "lisp/tahoma-embedded.el"
+                               "lisp/tahoma-sql.el"
                                "init.el"
                                "scripts/setup.el"
                                "scripts/compile.el"
@@ -84,6 +92,7 @@
       (should (string-match-p "^realclean: clean" makefile))
       (should (string-match-p "lisp/tahoma-package\\.elc" makefile))
       (should (string-match-p "lisp/tahoma-embedded\\.elc" makefile))
+      (should (string-match-p "lisp/tahoma-sql\\.elc" makefile))
       (should (string-match-p "^PACKAGE_DIRS = .*elpa" makefile))
       (should-not (string-match-p "^RUNTIME_DIRS = .*elpa" makefile)))))
 
@@ -286,6 +295,66 @@
                   ("Kconfig" . conf-mode)))
     (should (eq (cdr case)
                 (assoc-default (car case) auto-mode-alist #'string-match-p)))))
+
+;;; SQL development environment
+(ert-deftest emacs-config/sql-helper-packages-are-installed ()
+  (dolist (feature '(sql sqlformat sqlup-mode sql-indent))
+    (should (require feature nil t))))
+
+(ert-deftest emacs-config/setup-installs-sql-helper-packages ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "scripts/setup.el"
+                                            emacs-config-test-root))
+    (dolist (package '(sqlformat sqlup-mode sql-indent))
+      (should (search-forward (symbol-name package) nil t)))))
+
+(ert-deftest emacs-config/sql-mode-enables-query-editing-defaults ()
+  (with-temp-buffer
+    (sql-mode)
+    (should (eq sql-product my/sql-default-product))
+    (should (= fill-column my/sql-fill-column))
+    (should (not indent-tabs-mode))
+    (should (= tab-width 2))
+    (should show-trailing-whitespace)
+    (should (bound-and-true-p sqlup-mode))
+    (should (bound-and-true-p sqlind-minor-mode))
+    (should (eq (local-key-binding (kbd "C-c C-c"))
+                'my/sql-send-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c C-r")) 'sql-send-region))
+    (should (eq (local-key-binding (kbd "C-c C-b")) 'sql-send-buffer))
+    (should (eq (local-key-binding (kbd "C-c C-p")) 'sql-set-product))
+    (should (eq (local-key-binding (kbd "C-c C-f"))
+                'my/sql-format-region-or-buffer))
+    (should (eq (local-key-binding (kbd "C-c C-z")) 'sql-show-sqli-buffer))))
+
+(ert-deftest emacs-config/sql-global-prefix-keys-are-bound ()
+  (should (eq (lookup-key global-map (kbd "C-c s c")) 'my/sql-connect))
+  (should (eq (lookup-key global-map (kbd "C-c s i"))
+              'sql-product-interactive))
+  (should (eq (lookup-key global-map (kbd "C-c s s")) 'my/sql-scratch))
+  (should (eq (lookup-key global-map (kbd "C-c s e"))
+              'my/sql-copy-region-to-scratch))
+  (should (eq (lookup-key global-map (kbd "C-c s f"))
+              'my/sql-format-region-or-buffer)))
+
+(ert-deftest emacs-config/sql-file-associations-cover-common-query-files ()
+  (dolist (case '(("query.sql" . sql-mode)
+                  ("migration.pgsql" . sql-mode)
+                  ("scratch.sqlite" . sql-mode)
+                  ("schema.ddl" . sql-mode)
+                  ("seed.dml" . sql-mode)))
+    (should (eq (cdr case)
+                (assoc-default (car case) auto-mode-alist #'string-match-p)))))
+
+(ert-deftest emacs-config/sql-history-file-lives-under-runtime-var ()
+  (should (equal sql-input-ring-file-name my/sql-history-file))
+  (should (string-prefix-p (expand-file-name "var/" emacs-config-test-root)
+                           my/sql-history-file)))
+
+(ert-deftest emacs-config/sql-eglot-uses-configured-language-server ()
+  (let ((entry (assoc 'sql-mode eglot-server-programs)))
+    (should entry)
+    (should (equal (cdr entry) '("sqls")))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))
