@@ -44,6 +44,16 @@ would run on the remote machine rather than on the workstation in front of you."
   :type 'boolean
   :group 'my/terminal)
 
+(defcustom my/terminal-osc52-remote-only t
+  "When non-nil, use OSC 52 only for SSH-style terminal sessions.
+
+Local terminal Emacs should keep paired host clipboard commands such as
+pbcopy/pbpaste. Replacing only the copy side with OSC 52 while leaving paste
+pointed at the host pasteboard breaks core kill/yank muscle memory: `C-k' writes
+to one clipboard path and `C-y' reads from another."
+  :type 'boolean
+  :group 'my/terminal)
+
 (defcustom my/terminal-osc52-max-bytes 100000
   "Maximum UTF-8 byte length to send through OSC 52.
 Terminal emulators and multiplexers often cap OSC 52 payloads. Keeping a
@@ -148,6 +158,12 @@ multiplexer to the real terminal emulator."
    ((getenv "STY") 'screen)
    (t 'direct)))
 
+(defun my/terminal-ssh-session-p ()
+  "Return non-nil when this terminal session appears to be SSH-backed."
+  (or (getenv "SSH_CONNECTION")
+      (getenv "SSH_CLIENT")
+      (getenv "SSH_TTY")))
+
 (defun my/terminal-osc52-sequence (text &optional transport)
   "Return an OSC 52 clipboard escape sequence for TEXT.
 TRANSPORT may be `direct', `tmux', or `screen'. It defaults to the value from
@@ -184,12 +200,19 @@ a copy-only protocol in normal terminal workflows."
 
 (defun my/terminal-apply-osc52-clipboard ()
   "Prefer OSC 52 clipboard copy when Emacs is running in a terminal.
-`config-platform' may have already installed pbcopy, wl-copy, clip.exe, or
-similar helpers. Those are excellent for local terminal Emacs, but OSC 52 is
-the more portable default for SSH sessions because the terminal emulator owns
-the user's actual clipboard."
-  (when (my/terminal-frame-p)
-    (setq interprogram-cut-function #'my/terminal-osc52-copy)))
+`config-platform' may have already installed a matched clipboard pair such as
+pbcopy/pbpaste. Keep that pair for local terminal Emacs because `kill' and
+`yank' must talk to the same clipboard. For SSH-style terminal sessions, use OSC
+52 for outward copies and disable external paste integration so `C-y' reads the
+fresh Emacs kill ring instead of stale remote-host clipboard text. Local
+terminal sessions without a platform paste command may also use OSC 52 safely
+because there is no external paste source to disagree with the kill ring."
+  (when (and (my/terminal-frame-p)
+             (or (not my/terminal-osc52-remote-only)
+                 (my/terminal-ssh-session-p)
+                 (not interprogram-paste-function)))
+    (setq interprogram-cut-function #'my/terminal-osc52-copy
+          interprogram-paste-function nil)))
 
 (defun my/terminal-editor-environment ()
   "Return EDITOR-style environment entries managed by this config.

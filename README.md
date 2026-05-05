@@ -429,6 +429,9 @@ Terminal Emacs quality depends partly on the terminal outside Emacs:
 - Use a capable `TERM`, such as `xterm-256color` outside tmux or
   `tmux-256color` inside tmux. Avoid `TERM=dumb` except for intentionally
   minimal command output.
+- Local terminal Emacs uses a paired host clipboard integration when one is
+  available, such as `pbcopy`/`pbpaste` on macOS. That keeps ordinary editing
+  intact: text killed with `C-k` is the text yanked back with `C-y`.
 - Enable clipboard passthrough for OSC 52 in the local terminal emulator. This
   is what lets remote `emacs -nw` copy text back to the workstation clipboard.
 - In tmux, enable mouse and clipboard passthrough, and advertise truecolor when
