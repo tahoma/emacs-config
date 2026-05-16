@@ -16,7 +16,6 @@
 (require 'json)
 (require 'subr-x)
 
-(defconst user--editor-command "emacsclient -t -a \"\"")
 (defconst user--mcp-server-name "elisp-dev")
 (defconst user--mcp-server-id "elisp-dev-mcp")
 (defconst user--mcp-init-function "elisp-dev-mcp-enable")
@@ -29,6 +28,7 @@
 (defvar user--install nil)
 (defvar user--mcp-install nil)
 (defvar user--mcp-clients nil)
+(defvar user--editor-command nil)
 (defvar user--tmux-file nil)
 (defvar user--emacs-mcp-script nil)
 (defvar user--claude-config-file nil)
@@ -108,12 +108,19 @@
 (defun user--shell-block ()
   "Return the managed shell configuration block body."
   (string-join
-   '("# Keep shell-launched CLI editor flows inside the current terminal."
-     "export EDITOR='emacsclient -t -a \"\"'"
-     "export VISUAL=\"$EDITOR\""
-     "export GIT_EDITOR=\"$EDITOR\""
-     ""
-     "# Make pipx-managed tools visible to Emacs and commands launched from Emacs."
+   (append
+    (if (and user--editor-command
+             (not (string-empty-p user--editor-command)))
+        (list "# Optional shell-launched CLI editor integration."
+              (format "export EDITOR=%s"
+                      (shell-quote-argument user--editor-command))
+              "export VISUAL=\"$EDITOR\""
+              "export GIT_EDITOR=\"$EDITOR\""
+              "")
+      '("# This config leaves EDITOR, VISUAL, and GIT_EDITOR unchanged by default."
+        "# Set USER_EDITOR_COMMAND='emacs -nw' or 'emacsclient -t -a \"\"' to opt in."
+        ""))
+    '("# Make pipx-managed tools visible to Emacs and commands launched from Emacs."
      "case \":$PATH:\" in"
      "  *\":$HOME/.local/bin:\"*) ;;"
      "  *) export PATH=\"$HOME/.local/bin:$PATH\" ;;"
@@ -128,7 +135,7 @@
      "  eval \"$(/usr/local/bin/brew shellenv)\""
      "elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then"
      "  eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\""
-     "fi")
+     "fi"))
    "\n"))
 
 (defun user--tmux-block ()
@@ -194,10 +201,18 @@
           (user--status "ok" "managed Emacs shell block is present")
         (user--status "missing" "managed Emacs shell block is not present"))
     (user--status "manual" "fish shell detected; add equivalent settings manually"))
-  (dolist (variable '("EDITOR" "VISUAL" "GIT_EDITOR"))
-    (if (string= (or (getenv variable) "") user--editor-command)
-        (user--status "ok" "%s is %s" variable user--editor-command)
-      (user--status "missing" "%s is not %s" variable user--editor-command)))
+  (if (and user--editor-command
+           (not (string-empty-p user--editor-command)))
+      (dolist (variable '("EDITOR" "VISUAL" "GIT_EDITOR"))
+        (if (string= (or (getenv variable) "") user--editor-command)
+            (user--status "ok" "%s is %s" variable user--editor-command)
+          (user--status "missing" "%s is not %s" variable user--editor-command)))
+    (dolist (variable '("EDITOR" "VISUAL" "GIT_EDITOR"))
+      (let ((current (or (getenv variable) "")))
+        (if (string-empty-p current)
+            (user--status "manual" "%s is unmanaged by this helper" variable)
+          (user--status "manual" "%s is unmanaged by this helper; current value is %s"
+                        variable current)))))
   (let ((local-bin (expand-file-name ".local/bin" (user--home))))
     (if (user--path-has-p local-bin)
         (user--status "ok" "%s is on PATH" local-bin)
@@ -282,7 +297,7 @@
    ((user--emacsclient-reachable-p)
     (user--status "ok" "emacsclient can reach a running Emacs server"))
    (t
-    (user--status "warn" "emacsclient cannot reach Emacs; start a daemon before MCP use")))
+    (user--status "warn" "emacsclient cannot reach Emacs; run M-x my/mcp-start before MCP use")))
   (when (user--requested-mcp-client-p "claude")
     (user--say "Claude Code config: %s" user--claude-config-file)
     (cond
@@ -316,7 +331,7 @@
         (princ (user--managed-block user--shell-block-begin
                                     (user--shell-block)
                                     user--shell-block-end)))
-    (user--say "No automatic shell edit planned for fish. Add equivalent EDITOR, VISUAL, GIT_EDITOR, and PATH settings manually."))
+    (user--say "No automatic shell edit planned for fish. Add equivalent PATH settings manually, plus editor exports if USER_EDITOR_COMMAND is set."))
   (user--say "")
   (user--say "Would manage this tmux block in %s:" user--tmux-file)
   (princ (user--managed-block user--tmux-block-begin
@@ -357,7 +372,7 @@
   (user--say "The MCP clients should run this stdio command:")
   (user--say "  %s" (user--quote-command (user--mcp-stdio-command-list)))
   (user--say "")
-  (user--say "Emacs must be running as a server and the MCP server must be started from Emacs:")
+  (user--say "Start the MCP server from Emacs; it will ensure the Emacs server is available:")
   (user--say "  M-x my/mcp-start")
   (when (user--requested-mcp-client-p "claude")
     (user--say "")
@@ -469,6 +484,7 @@
         user--mcp-clients (split-string (user--env "USER_MCP_CLIENTS"
                                                    "claude codex cursor")
                                         "[[:space:]]+" t)
+        user--editor-command (user--env "USER_EDITOR_COMMAND")
         user--tmux-file (user--expand-path
                          (user--env "USER_TMUX_FILE"
                                     (expand-file-name ".tmux.conf" (user--home))))

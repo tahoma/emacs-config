@@ -46,8 +46,8 @@ This repository is meant to live at `~/.emacs.d`.
   browser launchers, trash behavior, and shell selection
 - Terminal integration: OSC 52 clipboard copy for terminal frames, including
   SSH sessions where local OS clipboard tools would run on the wrong host,
-  plus an `emacsclient -t` editor environment for CLI tools and `with-editor`
-  support for shells launched from Emacs, and xterm-compatible mouse support
+  plus `with-editor` support for shells launched from Emacs, optional
+  shell-editor integration, and xterm-compatible mouse support
 - Workspace ergonomics: Winner history, directional window movement, and
   project-named tab-bar workspaces without a separate workspace framework
 - Dired file management: project-root Dired entry points, Wdired bulk rename,
@@ -61,7 +61,7 @@ This repository is meant to live at `~/.emacs.d`.
 - Agentic workflow support: project-root Codex, Claude Code, and Cursor Agent
   launch helpers, project buffer saving, and copyable file/region/project
   context commands
-- MCP endpoint support: external agents can connect to the running Emacs daemon
+- MCP endpoint support: external agents can connect to a running Emacs session
   through `mcp-server-lib` and `elisp-dev-mcp` for read-only Elisp docs,
   definitions, variable metadata, Info lookup, and source inspection
 - Debugging support: optional Dape keybindings for Debug Adapter Protocol
@@ -106,8 +106,8 @@ libraries:
   and code-buffer whitespace hygiene
 - `config-undo.el`: Vundo visual undo tree bindings and display defaults
 - `config-platform.el`: OS-specific host integration guarded by `system-type`
-- `config-terminal.el`: terminal-frame behavior for SSH, `emacsclient -t`, and
-  CLI editor sessions
+- `config-terminal.el`: terminal-frame behavior for SSH, optional CLI editor
+  integration, and terminal input/clipboard details
 - `config-project.el`: project root helpers
 - `config-project-commands.el`: generic project-root command runner using
   compilation buffers
@@ -171,8 +171,9 @@ prefixes and let Emacs remind you of the leaves.
   or Cursor Agent from the project root, and `C-c a m s` starts the Emacs MCP
   endpoint for external agents.
 - Use `C-c T` for a project-root vterm and `C-c t` for a plain vterm. On
-  terminal-heavy machines, run `make user USER_INSTALL=1` so Git and other CLI
-  tools use `emacsclient -t` as their editor.
+  terminal-heavy machines, run `make user USER_INSTALL=1` for PATH and tmux
+  setup. Add `USER_EDITOR_COMMAND='emacs -nw'` or your preferred editor command
+  only when you want this repo to manage shell editor variables too.
 - Use Dired as a file-management buffer, not just a browser. `C-c f p` opens
   the project root, `C-c f d` jumps to the current file, `.` toggles omitted
   generated files, `(` toggles long listing details, and `C-c C-e` switches to
@@ -229,8 +230,9 @@ root, git branch/status, and project instruction files such as `AGENTS.md`,
 External agents can also reach into Emacs through MCP. `make setup` installs
 the `mcp-server-lib` and `elisp-dev-mcp` packages, installs the local stdio
 bridge at `~/.emacs.d/emacs-mcp-stdio.sh`, and keeps that generated script out
-of git. Start an Emacs daemon, then run `M-x my/mcp-start` before asking an MCP
-client to use the tools. Stop it with `M-x my/mcp-stop` when done.
+of git. In the Emacs session you want agents to reach, run `M-x my/mcp-start`;
+it starts the Emacs server needed by the stdio bridge and then enables the MCP
+tools. Stop it with `M-x my/mcp-stop` when done.
 
 The `elisp-dev-mcp` server is intentionally read-focused. It exposes tools for
 Elisp function docs, function definitions, variable metadata without values,
@@ -298,8 +300,8 @@ packages, so it is safe to run before `make setup`.
 
 ## User Setup
 
-Show whether user shell settings are configured for terminal Emacs, CLI editor
-workflows, tmux, and external MCP clients:
+Show whether user shell settings are configured for terminal Emacs, optional
+CLI editor workflows, tmux, and external MCP clients:
 
 ```sh
 make user
@@ -327,13 +329,15 @@ make user USER_MCP_INSTALL=1 USER_MCP_CLIENTS="claude codex cursor"
 make user USER_EMACS_MCP_SCRIPT=~/.emacs.d/emacs-mcp-stdio.sh USER_CURSOR_MCP_FILE=~/.cursor/mcp.json
 ```
 
-The user helper checks and can configure `EDITOR`, `VISUAL`, `GIT_EDITOR`,
-`~/.local/bin` on `PATH`, Homebrew/Linuxbrew shell environment loading when
-`brew` is installed, and tmux mouse/clipboard/truecolor settings. Override the
-detected files when needed:
+The user helper checks and can configure `~/.local/bin` on `PATH`,
+Homebrew/Linuxbrew shell environment loading when `brew` is installed, and tmux
+mouse/clipboard/truecolor settings. It leaves `EDITOR`, `VISUAL`, and
+`GIT_EDITOR` unmanaged by default; opt in with `USER_EDITOR_COMMAND` when you
+want those variables managed too. Override the detected files when needed:
 
 ```sh
 make user USER_INSTALL=1 USER_SHELL_FILE=~/.zshrc USER_TMUX_FILE=~/.tmux.conf
+make user USER_INSTALL=1 USER_EDITOR_COMMAND='emacs -nw'
 ```
 
 `scripts/user.el` is standalone batch Elisp. It does not load `init.el` or
@@ -394,31 +398,37 @@ and compiles the `vterm` native module, then freshens local `.elc` files.
 
 ## Terminal Editor
 
-For terminal-heavy work, point shell editor variables at the Emacs server:
+By default, this config does not overwrite `EDITOR`, `VISUAL`, or `GIT_EDITOR`
+in your login shell. That keeps ordinary Git commit-message editing predictable
+and avoids making `emacsclient` part of basic shell muscle memory unless you
+explicitly ask for it.
+
+`with-editor` remains enabled for editor requests launched from inside Emacs:
+`shell`, `eshell`, `term`, `vterm`, `M-!`, and `M-&` can call back into the
+current Emacs session without forcing your outside shell to use `emacsclient`.
+In Git commit buffers, `C-c C-c` finishes, `C-c C-k` cancels, and `C-x C-c`
+also finishes the quick editor instead of trying to shut down the whole Emacs
+session.
+
+If you do want this repository to manage shell editor variables, opt in with an
+explicit command:
 
 ```sh
-export EDITOR='emacsclient -t -a ""'
-export VISUAL="$EDITOR"
-export GIT_EDITOR="$EDITOR"
+make user USER_INSTALL=1 USER_EDITOR_COMMAND='emacs -nw'
+make user USER_INSTALL=1 USER_EDITOR_COMMAND='emacsclient -t -a ""'
 ```
 
-`make user USER_INSTALL=1` can add those exports to the detected shell startup
-file, along with PATH and tmux settings used by this config.
+The matching Emacs-side knob is `my/terminal-editor-command`; leave it nil to
+avoid changing subprocess editor variables, or set it to the same command you
+use in your shell. `my/terminal-start-server` is also opt-in. Plain
+`emacsclient` edits still finish with `C-x #` when you intentionally use them.
 
-The config starts an Emacs server during interactive sessions when one is not
-already running, and it sets the same variables for subprocesses launched from
-inside Emacs. `with-editor` also exports editor variables for `shell`, `eshell`,
-`term`, `vterm`, and one-shot shell commands. `emacsclient -t` keeps Git commits
-and other CLI editor requests inside the current terminal; `-a ""` starts a
-server-backed Emacs if needed. Finish a plain `emacsclient` edit with `C-x #`;
-in Git commit buffers, `C-c C-c` finishes, `C-c C-k` cancels, and `C-x C-c`
-also finishes the quick editor instead of trying to shut down the whole Emacs
-session. In interactive terminal frames, `xterm-mouse-mode` is enabled so
-scrolling and point/window selection work in terminals that support mouse escape
-sequences. Git commit message buffers get a 72-column body fill, Auto Fill, and
-Flyspell when a spelling backend exists. TRAMP defaults prefer SSH, keep remote
-autosaves under `var/tramp-auto-save/`, reduce lockfile friction, and use modest
-logging for normal remote editing. Common xterm escape sequences are decoded for
+In interactive terminal frames, `xterm-mouse-mode` is enabled so scrolling and
+point/window selection work in terminals that support mouse escape sequences.
+Git commit message buffers get a 72-column body fill, Auto Fill, and Flyspell
+when a spelling backend exists. TRAMP defaults prefer SSH, keep remote autosaves
+under `var/tramp-auto-save/`, reduce lockfile friction, and use modest logging
+for normal remote editing. Common xterm escape sequences are decoded for
 modified arrows, Home, and End so terminal frames can use familiar navigation
 keys without GUI-only modifiers.
 

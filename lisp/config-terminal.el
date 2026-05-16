@@ -2,10 +2,10 @@
 
 ;;; Commentary:
 ;; Terminal Emacs deserves a few behaviors that are separate from GUI Emacs:
-;; remote sessions, `emacsclient -t', and EDITOR-driven buffers all run inside
-;; terminal frames where OS clipboard commands and GUI-only affordances are not
-;; always available. This module gathers those terminal-specific choices so the
-;; normal platform module can stay focused on host OS integration.
+;; remote sessions, optional EDITOR-driven buffers, and terminal frames all have
+;; different constraints from GUI frames. This module gathers those
+;; terminal-specific choices so the normal platform module can stay focused on
+;; host OS integration.
 
 ;;; Code:
 
@@ -62,19 +62,23 @@ large region is killed accidentally."
   :type 'integer
   :group 'my/terminal)
 
-(defcustom my/terminal-start-server t
+(defcustom my/terminal-start-server nil
   "When non-nil, start an Emacs server during interactive sessions.
-The server is what makes `emacsclient -t -a \"\"' fast and reliable for Git,
-SSH shells, and other command-line tools that ask for an editor. Batch runs do
-not start a server because build and test commands should stay self-contained."
+This is intentionally opt-in. Some workflows like using `emacsclient' as a
+global shell editor benefit from an always-ready server, while this config's
+default keeps ordinary terminal and Git editor behavior out of the way. Batch
+runs never start a server because build and test commands should stay
+self-contained."
   :type 'boolean
   :group 'my/terminal)
 
-(defcustom my/terminal-editor-command "emacsclient -t -a \"\""
-  "Editor command recommended for terminal-first command-line workflows.
-The `-t' flag keeps the client in the current terminal, while `-a \"\"' starts a
-fresh server-backed Emacs if no server is already available."
-  :type 'string
+(defcustom my/terminal-editor-command nil
+  "Optional command to export as EDITOR, VISUAL, and GIT_EDITOR inside Emacs.
+The default nil means this config leaves editor variables alone. Set this to a
+string such as \"emacs -nw\" or \"emacsclient -t -a \\\"\\\"\" when you
+intentionally want all subprocesses launched from Emacs to inherit that editor."
+  :type '(choice (const :tag "Do not manage editor variables" nil)
+                 string)
   :group 'my/terminal)
 
 (defcustom my/terminal-with-editor-enabled t
@@ -87,9 +91,9 @@ server instead of hanging on a nested editor."
 
 (defcustom my/terminal-mouse-enabled t
   "When non-nil, enable mouse events in interactive terminal frames.
-Terminal mouse support is most useful over SSH and in `emacsclient -t' frames,
-where it makes scrolling, selecting windows, and point placement feel closer to
-GUI Emacs without changing GUI behavior."
+Terminal mouse support is most useful over SSH and other long-lived terminal
+frames, where it makes scrolling, selecting windows, and point placement feel
+closer to GUI Emacs without changing GUI behavior."
   :type 'boolean
   :group 'my/terminal)
 
@@ -217,19 +221,24 @@ because there is no external paste source to disagree with the kill ring."
 (defun my/terminal-editor-environment ()
   "Return EDITOR-style environment entries managed by this config.
 Setting these inside Emacs affects shells and subprocesses launched from Emacs.
-Users should still export the same values in their login shell so Git and other
-CLI tools launched outside Emacs get the fast `emacsclient -t' path too."
-  `(("EDITOR" . ,my/terminal-editor-command)
-    ("VISUAL" . ,my/terminal-editor-command)
-    ("GIT_EDITOR" . ,my/terminal-editor-command)))
+The default is nil so the config does not overwrite a user's normal shell
+editor preference. `with-editor' still handles editor callbacks for shells and
+commands launched from inside Emacs."
+  (when (and my/terminal-editor-command
+             (not (string-empty-p my/terminal-editor-command)))
+    `(("EDITOR" . ,my/terminal-editor-command)
+      ("VISUAL" . ,my/terminal-editor-command)
+      ("GIT_EDITOR" . ,my/terminal-editor-command))))
 
 (defun my/terminal-apply-editor-environment ()
-  "Set EDITOR, VISUAL, and GIT_EDITOR for subprocesses launched from Emacs."
+  "Set EDITOR, VISUAL, and GIT_EDITOR when explicitly configured.
+Leaving `my/terminal-editor-command' nil keeps subprocesses launched from Emacs
+on the user's existing editor environment."
   (dolist (entry (my/terminal-editor-environment))
     (setenv (car entry) (cdr entry))))
 
 (defun my/terminal-maybe-start-server ()
-  "Start the Emacs server for `emacsclient' when this is an interactive session."
+  "Start the Emacs server when this interactive session opted into doing so."
   (when (and my/terminal-start-server
              (not noninteractive)
              (not (server-running-p)))
@@ -239,7 +248,8 @@ CLI tools launched outside Emacs get the fast `emacsclient -t' path too."
   "Teach shells launched inside Emacs how to call back into this Emacs.
 The hook coverage handles long-lived shell buffers, while the remaps and global
 mode cover one-shot `M-!' and `M-&' commands. This is the inside-Emacs
-counterpart to exporting EDITOR in the user's login shell."
+counterpart to a shell-level editor setting, without requiring the user's login
+shell to use `emacsclient'."
   (when my/terminal-with-editor-enabled
     (add-hook 'shell-mode-hook #'with-editor-export-editor)
     (add-hook 'eshell-mode-hook #'with-editor-export-editor)
@@ -255,10 +265,10 @@ counterpart to exporting EDITOR in the user's login shell."
   "Finish the current quick-editor buffer.
 
 Commit messages and other `$EDITOR' buffers can arrive through two paths. Magit
-and Emacs-launched shells use `with-editor', while command-line Git usually
-arrives through a plain `emacsclient' server buffer. Dispatch to the right
-finish command for those cases, and fall back to the normal `C-x C-c' command
-outside quick-editor buffers."
+and Emacs-launched shells use `with-editor'. Users who explicitly opt into
+`emacsclient' as an external editor may also see plain server buffers. Dispatch
+to the right finish command for those cases, and fall back to the normal
+`C-x C-c' command outside quick-editor buffers."
   (interactive "P")
   (cond
    ((and (bound-and-true-p with-editor-mode)
@@ -290,10 +300,10 @@ intent clear and avoids enabling terminal escape handling during batch runs."
 
 (defun my/terminal-git-commit-setup ()
   "Apply writing defaults for commit messages opened by Git.
-Commit buffers are a common terminal `$EDITOR' path, so make the body wrap at a
-conventional width, enable Auto Fill, and turn on Flyspell when the host has a
-spelling backend. The finish/cancel bindings live in the package declaration so
-they are visible even before a commit buffer has run its hooks."
+Commit buffers benefit from a conventional body width, Auto Fill, and Flyspell
+when the host has a spelling backend. The finish/cancel bindings live in the
+package declaration so they are visible even before a commit buffer has run its
+hooks."
   (setq-local fill-column my/terminal-git-commit-fill-column)
   (auto-fill-mode 1)
   (when (and (fboundp 'flyspell-mode)

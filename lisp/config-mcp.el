@@ -3,13 +3,14 @@
 ;;; Commentary:
 ;; The rest of this config lets Emacs launch agent CLIs. This module turns the
 ;; direction around: Emacs can expose selected, read-only Elisp development
-;; capabilities to external MCP clients. The stdio bridge still requires a
-;; running Emacs daemon, so startup remains explicit instead of silently opening
-;; a control surface on every Emacs launch.
+;; capabilities to external MCP clients. The stdio bridge talks to Emacs through
+;; `emacsclient', so this module starts the Emacs server only when MCP is
+;; explicitly enabled instead of making `emacsclient' the default shell editor.
 
 ;;; Code:
 
 (require 'subr-x)
+(require 'server)
 (require 'use-package)
 
 (defvar elisp-dev-mcp-additional-allowed-dirs)
@@ -85,6 +86,14 @@ files under `user-emacs-directory'."
       (message "Installed Emacs MCP stdio bridge: %s" target))
     target))
 
+(defun my/mcp-maybe-start-emacs-server ()
+  "Ensure the Emacs server is available for the MCP stdio bridge.
+This keeps server startup tied to the explicit MCP workflow. Normal editing and
+shell `$EDITOR' behavior do not need to opt into `emacsclient' just because the
+config knows how to expose an MCP endpoint."
+  (unless (server-running-p)
+    (server-start)))
+
 (defun my/mcp-apply-elisp-dev-allowed-dirs ()
   "Apply the trusted source directories used by `elisp-dev-mcp'."
   (setq elisp-dev-mcp-additional-allowed-dirs
@@ -109,9 +118,12 @@ files under `user-emacs-directory'."
     (message "Disabled Elisp MCP tools")))
 
 (defun my/mcp-start ()
-  "Start the Emacs MCP server and register Elisp development tools."
+  "Start the Emacs MCP server and register Elisp development tools.
+The stdio bridge used by external clients reaches this Emacs through
+`emacsclient', so starting MCP also ensures the underlying Emacs server exists."
   (interactive)
   (require 'mcp-server-lib-commands)
+  (my/mcp-maybe-start-emacs-server)
   (my/mcp-enable-elisp-dev)
   (unless (and (boundp 'mcp-server-lib--running)
                mcp-server-lib--running)
